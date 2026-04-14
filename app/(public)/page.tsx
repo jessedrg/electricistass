@@ -18,6 +18,7 @@ import {
   MapPin
 } from "lucide-react"
 
+// Electricistas 24H - Home Page
 const PHONE_NUMBER = "900433214"
 const PHONE_DISPLAY = "900 433 214"
 
