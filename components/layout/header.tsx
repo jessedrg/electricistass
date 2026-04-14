@@ -12,6 +12,7 @@ const PHONE_DISPLAY = "900 433 214"
 const navigation = [
   { name: "Inicio", href: "/" },
   { name: "Servicios", href: "/#servicios" },
+  { name: "Ciudades", href: "/electricista-main" },
   { name: "Blog", href: "/blog" },
   { name: "Contacto", href: "/#contacto" },
 ]
