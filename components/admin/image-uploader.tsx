@@ -72,7 +72,19 @@ export function ImageUploader({ value, onChange, folder = "uploads", className }
     }
   }
 
-  const handleRemove = () => {
+  const handleRemove = async () => {
+    // If it's a blob URL, delete it from storage
+    if (value && value.includes('blob.vercel-storage.com')) {
+      try {
+        await fetch('/api/admin/upload/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: value })
+        })
+      } catch (err) {
+        console.error('Error deleting image from blob:', err)
+      }
+    }
     onChange("")
   }
 
