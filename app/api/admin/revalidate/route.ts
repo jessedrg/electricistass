@@ -22,16 +22,18 @@ export async function POST(request: NextRequest) {
     // Revalidar tags
     if (tags && Array.isArray(tags)) {
       for (const tag of tags) {
-        revalidateTag(tag)
+        revalidateTag(tag, "max")
       }
     }
 
-    // Siempre revalidar el sitemap
-    revalidatePath("/sitemap.xml")
+    // Revalidar el sitemap correctamente - usar el path del layout
+    revalidatePath("/sitemap.xml", "layout")
+    // También revalidar la raíz para forzar regeneración
+    revalidatePath("/", "layout")
 
     return NextResponse.json({ 
       success: true, 
-      revalidated: { paths: paths || [], tags: tags || [] }
+      revalidated: { paths: paths || [], tags: tags || [], sitemap: true }
     })
   } catch (error) {
     console.error("Error revalidating:", error)
