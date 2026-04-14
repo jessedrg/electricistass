@@ -2,6 +2,9 @@ import { generateText, Output } from 'ai'
 import { z } from 'zod'
 import { verifyAdminSession } from '@/lib/admin/auth'
 
+// Aumentar timeout para generacion de contenido AI (max 60 segundos)
+export const maxDuration = 60
+
 const pageContentSchema = z.object({
   // LOCATION DETECTION
   is_neighborhood: z.boolean().describe('TRUE si es barrio/distrito, FALSE si es ciudad'),
