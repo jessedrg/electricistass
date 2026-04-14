@@ -141,7 +141,7 @@ export default async function HomePage() {
                   {PHONE_DISPLAY}
                 </a>
               </Button>
-              <Button size="lg" variant="outline" className="gap-2 text-lg h-14 px-8 rounded-full border-gray-600 text-white hover:bg-white/10" asChild>
+              <Button size="lg" className="gap-2 text-lg h-14 px-8 rounded-full bg-white text-gray-900 hover:bg-gray-100" asChild>
                 <a href="#servicios">
                   Ver Servicios
                   <ArrowRight className="h-5 w-5" />
