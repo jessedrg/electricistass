@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Bloquear URLs antiguas que ya no existen (formato /servicio/ciudad)
+Disallow: /problema/
+Disallow: /cerrajero/
+Disallow: /electricista/
+Disallow: /fontanero/
+
+# Sitemap
+Sitemap: https://www.manitaspl.com/sitemap.xml
