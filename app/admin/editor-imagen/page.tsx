@@ -24,7 +24,7 @@ const CIUDADES = [
   "Marbella", "Algeciras", "Torrevieja", "Lugo", "Reus", "Toledo", "Avila", "Segovia", "Cuenca"
 ]
 
-const SERVICIOS = ["Cerrajero", "Electricista", "Fontanero", "Cerrajeria", "Cerrajeros"]
+const SERVICIOS = ["Electricista", "Electricistas", "Electricista 24h", "Electricista Urgente", "Electricista Urgencias"]
 
 const TAGLINES = [
   "Servicio rapido y barato",
@@ -33,15 +33,18 @@ const TAGLINES = [
   "Precios sin sorpresas",
   "Urgencias al instante",
   "Profesionales de confianza",
-  "Abrimos tu puerta ya",
-  "Sin romper tu cerradura",
+  "Reparamos averias electricas",
+  "Instalaciones seguras",
   "Presupuesto gratis",
   "Servicio express",
   "Atencion inmediata",
   "Los mejores precios",
-  "Expertos en seguridad",
-  "Tu cerrajero de confianza",
+  "Expertos en electricidad",
+  "Tu electricista de confianza",
   "Solucion garantizada",
+  "Boletines electricos",
+  "Cuadros electricos",
+  "Iluminacion LED",
 ]
 
 const ESTILOS_TITULO = [
@@ -61,41 +64,41 @@ const ESTILOS_SUBTITULO = [
 ]
 
 const COLORES_TEMA = [
-  { primary: "#f97316", secondary: "#ea580c" }, // Naranja
-  { primary: "#3b82f6", secondary: "#2563eb" }, // Azul
+  { primary: "#10b981", secondary: "#059669" }, // Esmeralda (principal)
+  { primary: "#10b981", secondary: "#059669" }, // Esmeralda (repetido para mayor probabilidad)
   { primary: "#22c55e", secondary: "#16a34a" }, // Verde
-  { primary: "#ef4444", secondary: "#dc2626" }, // Rojo
-  { primary: "#8b5cf6", secondary: "#7c3aed" }, // Morado
+  { primary: "#3b82f6", secondary: "#2563eb" }, // Azul
   { primary: "#f59e0b", secondary: "#d97706" }, // Amarillo
+  { primary: "#14b8a6", secondary: "#0d9488" }, // Teal
 ]
 
-// Imagenes base de los trabajadores
+// Imagenes base de los electricistas (Vercel Blob)
 const BASE_IMAGES = [
   {
-    id: "david",
-    name: "David - Cerrajero",
-    url: "/images/bases/david-cerrajero.jpeg",
-    defaultService: "Cerrajero"
+    id: "electricista1",
+    name: "Diego - Electricista",
+    url: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/electricista1.png-5lV7B658fbNcJr7tqNYexrpGMIVE28.jpeg",
+    defaultService: "Electricista"
   },
   {
-    id: "marcos", 
-    name: "Marcos - OK",
-    url: "/images/bases/marcos-manitas.jpeg",
-    defaultService: "Manitas"
+    id: "electricista2", 
+    name: "Maria - Electricista",
+    url: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/electricista2.png-fOFwgqjvlWMIbBVd11b4MKC5HwARgz.jpeg",
+    defaultService: "Electricista"
   },
   {
-    id: "javier",
-    name: "Javier - Fontanero", 
-    url: "/images/bases/javier-fontanero.jpeg",
-    defaultService: "Fontanero"
+    id: "electricista3",
+    name: "Luis - Electricista", 
+    url: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/electricista3.png-9ASRT3rhYVXRjk811yU2vaFgXCnm53.jpeg",
+    defaultService: "Electricista"
   }
 ]
 
 const COLORS = [
-  { name: "Naranja", value: "#f97316", bg: "bg-emerald-600" },
-  { name: "Azul", value: "#3b82f6", bg: "bg-blue-500" },
+  { name: "Esmeralda", value: "#10b981", bg: "bg-emerald-500" },
   { name: "Verde", value: "#22c55e", bg: "bg-green-500" },
-  { name: "Rojo", value: "#ef4444", bg: "bg-red-500" },
+  { name: "Azul", value: "#3b82f6", bg: "bg-blue-500" },
+  { name: "Teal", value: "#14b8a6", bg: "bg-teal-500" },
   { name: "Negro", value: "#000000", bg: "bg-black" },
 ]
 
@@ -137,22 +140,22 @@ export default function ImageEditorPage() {
   
   // Elementos de texto - inicializar con valores de URL si existen
   const [textElements, setTextElements] = useState<TextElement[]>([
-    { id: "title", text: urlService || "Cerrajero", x: 5, y: 8, fontSize: 64, color: "#f97316", fontWeight: "800", visible: true },
-    { id: "subtitle", text: urlCity ? `en ${urlCity}` : "en Madrid", x: 5, y: 18, fontSize: 48, color: "#f97316", fontWeight: "800", visible: true },
+    { id: "title", text: urlService || "Electricista", x: 5, y: 8, fontSize: 64, color: "#10b981", fontWeight: "800", visible: true },
+    { id: "subtitle", text: urlCity ? `en ${urlCity}` : "en Madrid", x: 5, y: 18, fontSize: 48, color: "#10b981", fontWeight: "800", visible: true },
     { id: "tagline", text: "Servicio rapido y barato", x: 5, y: 28, fontSize: 24, color: "#000000", fontWeight: "600", visible: true },
     { id: "extra", text: "", x: 5, y: 38, fontSize: 20, color: "#666666", fontWeight: "500", visible: false },
   ])
   
   // Badges/Botones
   const [badges, setBadges] = useState<BadgeElement[]>([
-    { id: "phone", type: "phone", text: "900 433 214", x: 5, y: 85, visible: true, bgColor: "#f97316" },
+    { id: "phone", type: "phone", text: "900 433 214", x: 5, y: 85, visible: true, bgColor: "#10b981" },
     { id: "whatsapp", type: "whatsapp", text: "WhatsApp", x: 35, y: 85, visible: true, bgColor: "#22c55e" },
     { id: "web", type: "custom", text: "electricistass.com", x: 60, y: 85, visible: true, bgColor: "#000000" },
   ])
 
   // Decoraciones
   const [showStripes, setShowStripes] = useState(true)
-  const [stripeColor, setStripeColor] = useState("#f97316")
+  const [stripeColor, setStripeColor] = useState("#10b981")
   
   // Estado de generacion
   const [isGenerating, setIsGenerating] = useState(false)
@@ -192,13 +195,13 @@ export default function ImageEditorPage() {
 
   const resetToDefaults = () => {
     setTextElements([
-      { id: "title", text: selectedImage.defaultService, x: 5, y: 8, fontSize: 64, color: "#f97316", fontWeight: "800", visible: true },
-      { id: "subtitle", text: "en Madrid", x: 5, y: 18, fontSize: 48, color: "#f97316", fontWeight: "800", visible: true },
+      { id: "title", text: selectedImage.defaultService, x: 5, y: 8, fontSize: 64, color: "#10b981", fontWeight: "800", visible: true },
+      { id: "subtitle", text: "en Madrid", x: 5, y: 18, fontSize: 48, color: "#10b981", fontWeight: "800", visible: true },
       { id: "tagline", text: "Servicio rapido y barato", x: 5, y: 28, fontSize: 24, color: "#000000", fontWeight: "600", visible: true },
       { id: "extra", text: "", x: 5, y: 38, fontSize: 20, color: "#666666", fontWeight: "500", visible: false },
     ])
     setBadges([
-      { id: "phone", type: "phone", text: "900 433 214", x: 5, y: 85, visible: true, bgColor: "#f97316" },
+      { id: "phone", type: "phone", text: "900 433 214", x: 5, y: 85, visible: true, bgColor: "#10b981" },
       { id: "whatsapp", type: "whatsapp", text: "WhatsApp", x: 35, y: 85, visible: true, bgColor: "#22c55e" },
       { id: "web", type: "custom", text: "electricistass.com", x: 60, y: 85, visible: true, bgColor: "#000000" },
     ])
