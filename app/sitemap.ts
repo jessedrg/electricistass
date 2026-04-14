@@ -3,10 +3,6 @@ import { createClient } from "@supabase/supabase-js"
 
 type ChangeFrequency = "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never"
 
-// Forzar que el sitemap sea dinámico y no se cachee
-export const dynamic = "force-dynamic"
-export const revalidate = 0
-
 /**
  * Sitemap dinámico - Solo incluye contenido publicado de la base de datos
  */
