@@ -1,46 +1,53 @@
 import Link from "next/link"
-import { Phone, Mail, MapPin, Zap, ArrowRight } from "lucide-react"
+import { Phone, Mail, MapPin, Zap, ArrowRight, Clock, Shield, CheckCircle } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 
 const PHONE_NUMBER = "900433214"
 const PHONE_DISPLAY = "900 433 214"
 
+const electricalServices = [
+  { name: "Averías Eléctricas", href: "/#servicios" },
+  { name: "Instalaciones", href: "/#servicios" },
+  { name: "Cuadros Eléctricos", href: "/#servicios" },
+  { name: "Iluminación", href: "/#servicios" },
+  { name: "Boletines Eléctricos", href: "/#servicios" },
+  { name: "Urgencias 24h", href: "/#contacto" },
+]
+
 async function getFooterData() {
   const supabase = await createClient()
   
-  const [servicesResult, citiesResult] = await Promise.all([
-    supabase
-      .from("services")
-      .select("name, slug")
-      .order("name")
-      .limit(6),
-    supabase
-      .from("cities")
-      .select("name, slug")
-      .order("population", { ascending: false, nullsFirst: false })
-      .limit(6)
-  ])
+  const { data: cities } = await supabase
+    .from("cities")
+    .select("name, slug")
+    .order("population", { ascending: false, nullsFirst: false })
+    .limit(6)
   
   return {
-    services: servicesResult.data || [],
-    cities: citiesResult.data || []
+    cities: cities || []
   }
 }
 
 export async function Footer() {
-  const { services, cities } = await getFooterData()
+  const { cities } = await getFooterData()
+  
   return (
     <footer className="bg-gray-900 text-gray-300">
       {/* CTA Banner */}
-      <div className="bg-emerald-600">
+      <div className="bg-gradient-to-r from-emerald-600 to-emerald-700">
         <div className="container mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3 text-white">
-            <Zap className="h-6 w-6 text-yellow-300" />
-            <span className="text-lg font-semibold">¿Necesitas un electricista urgente?</span>
+            <div className="p-2 rounded-full bg-white/10">
+              <Zap className="h-6 w-6 text-yellow-300" />
+            </div>
+            <div>
+              <span className="text-lg font-semibold block">¿Necesitas un electricista urgente?</span>
+              <span className="text-emerald-100 text-sm">Respondemos en menos de 30 minutos</span>
+            </div>
           </div>
           <a 
             href={`tel:+34${PHONE_NUMBER}`}
-            className="inline-flex items-center gap-2 bg-white text-emerald-700 font-bold px-6 py-2.5 rounded-full hover:bg-emerald-50 transition-colors"
+            className="inline-flex items-center gap-2 bg-white text-emerald-700 font-bold px-6 py-3 rounded-full hover:bg-emerald-50 transition-colors shadow-lg"
           >
             <Phone className="h-4 w-4" />
             Llama al {PHONE_DISPLAY}
@@ -50,20 +57,20 @@ export async function Footer() {
       </div>
 
       <div className="container mx-auto px-4 py-12">
-        {/* Main footer grid: 3 columns */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+        {/* Main footer grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand + Contact */}
-          <div>
+          <div className="lg:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-emerald-600 text-white">
-                <Zap className="h-4 w-4" />
+              <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-emerald-600 text-white">
+                <Zap className="h-5 w-5" />
               </div>
-              <span className="font-bold text-lg text-white">Electricistas 24H</span>
+              <span className="font-bold text-xl text-white">Electricistas 24H</span>
             </Link>
             <p className="text-sm text-gray-400 mb-5 leading-relaxed">
-              Servicio profesional de electricidad en toda España. Urgencias 24 horas, instalaciones, averías y reformas eléctricas.
+              Servicio profesional de electricidad en toda España. Urgencias 24 horas, instalaciones, averías y certificados eléctricos.
             </p>
-            <div className="space-y-2.5 text-sm">
+            <div className="space-y-3 text-sm">
               <a href={`tel:+34${PHONE_NUMBER}`} className="flex items-center gap-2.5 text-emerald-400 hover:text-emerald-300 transition-colors font-semibold">
                 <Phone className="h-4 w-4" />
                 {PHONE_DISPLAY}
@@ -79,44 +86,59 @@ export async function Footer() {
             </div>
           </div>
 
-          {/* Services + Cities side by side */}
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <h3 className="font-semibold text-white mb-4 text-sm uppercase tracking-wider">Servicios</h3>
-              <ul className="space-y-2">
-                {services.map((service) => (
-                  <li key={service.slug}>
-                    <Link 
-                      href={`/${service.slug}`}
-                      className="text-sm text-gray-400 hover:text-emerald-400 transition-colors"
-                    >
-                      {service.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-white mb-4 text-sm uppercase tracking-wider">Ciudades</h3>
-              <ul className="space-y-2">
-                {cities.map((city) => (
-                  <li key={city.slug}>
-                    <Link 
-                      href={`/electricista-${city.slug}`}
-                      className="text-sm text-gray-400 hover:text-emerald-400 transition-colors"
-                    >
-                      {city.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {/* Services */}
+          <div>
+            <h3 className="font-semibold text-white mb-4 text-sm uppercase tracking-wider">Servicios</h3>
+            <ul className="space-y-2.5">
+              {electricalServices.map((service) => (
+                <li key={service.name}>
+                  <Link 
+                    href={service.href}
+                    className="text-sm text-gray-400 hover:text-emerald-400 transition-colors flex items-center gap-2"
+                  >
+                    <Zap className="h-3 w-3" />
+                    {service.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
 
-          {/* Legal */}
+          {/* Cities */}
           <div>
-            <h3 className="font-semibold text-white mb-4 text-sm uppercase tracking-wider">Legal</h3>
-            <ul className="space-y-2">
+            <h3 className="font-semibold text-white mb-4 text-sm uppercase tracking-wider">Ciudades</h3>
+            <ul className="space-y-2.5">
+              {cities.map((city) => (
+                <li key={city.slug}>
+                  <Link 
+                    href={`/electricista-${city.slug}`}
+                    className="text-sm text-gray-400 hover:text-emerald-400 transition-colors"
+                  >
+                    Electricista en {city.name}
+                  </Link>
+                </li>
+              ))}
+              <li>
+                <Link 
+                  href="/electricista-main"
+                  className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1"
+                >
+                  Ver todas las ciudades
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Info + Legal */}
+          <div>
+            <h3 className="font-semibold text-white mb-4 text-sm uppercase tracking-wider">Información</h3>
+            <ul className="space-y-2.5 mb-6">
+              <li>
+                <Link href="/blog" className="text-sm text-gray-400 hover:text-white transition-colors">
+                  Blog
+                </Link>
+              </li>
               <li>
                 <Link href="/politica-privacidad" className="text-sm text-gray-400 hover:text-white transition-colors">
                   Política de Privacidad
@@ -132,12 +154,23 @@ export async function Footer() {
                   Política de Cookies
                 </Link>
               </li>
-              <li>
-                <Link href="/blog" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Blog
-                </Link>
-              </li>
             </ul>
+            
+            {/* Trust badges */}
+            <div className="space-y-2 pt-4 border-t border-gray-800">
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <Clock className="h-3.5 w-3.5 text-emerald-500" />
+                Servicio 24/7
+              </div>
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <Shield className="h-3.5 w-3.5 text-emerald-500" />
+                Profesionales certificados
+              </div>
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                Garantía en trabajos
+              </div>
+            </div>
           </div>
         </div>
 
