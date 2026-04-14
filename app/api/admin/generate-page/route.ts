@@ -1,9 +1,9 @@
-import { generateText, Output } from 'ai'
+import { streamObject } from 'ai'
 import { z } from 'zod'
 import { verifyAdminSession } from '@/lib/admin/auth'
 
-// Aumentar timeout para generacion de contenido AI (max 60 segundos)
-export const maxDuration = 60
+// Aumentar timeout para generacion de contenido AI
+export const maxDuration = 300
 
 const pageContentSchema = z.object({
   // LOCATION DETECTION
@@ -156,11 +156,9 @@ export async function POST(req: Request) {
     const extraSections = ['testimonial_destacado', 'dato_curioso', 'proceso_trabajo', 'zona_cobertura', 'ninguno']
     const selectedExtra = extraSections[Math.floor(Math.random() * extraSections.length)]
 
-    const { output } = await generateText({
+    const result = streamObject({
       model: selectedModel,
-      output: Output.object({
-        schema: pageContentSchema,
-      }),
+      schema: pageContentSchema,
       messages: [
         {
           role: 'user',
@@ -202,7 +200,7 @@ Si es CIUDAD independiente: is_neighborhood=false
 📝 INTRO_TEXT (~${introLength} palabras) - FORMATO HTML RICO OBLIGATORIO:
 ESTRUCTURA ${selectedTone.toUpperCase()}:
 
-🔥 FORMATO HTML OBLIGATORIO - USA TODOS ESTOS ELEMENTOS:
+��� FORMATO HTML OBLIGATORIO - USA TODOS ESTOS ELEMENTOS:
 <h2>Titulo de seccion con emoji ${Math.random() > 0.5 ? 'al inicio' : 'al final'}</h2>
 <p>Parrafo con <strong>palabras importantes en negrita</strong> y texto normal mezclado.</p>
 <p><strong>Frase completa en negrita para destacar.</strong></p>
@@ -322,7 +320,9 @@ ${selectedExtra !== 'ninguno' ? `Generar contenido HTML ${30 + Math.floor(Math.r
       ],
     })
 
-    return Response.json({ content: output })
+    // Esperar el objeto completo y devolverlo
+    const content = await result.object
+    return Response.json({ content })
   } catch (error) {
     console.error('Error generating page content:', error)
     return Response.json({ error: 'Error al generar contenido' }, { status: 500 })
