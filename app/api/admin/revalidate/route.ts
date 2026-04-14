@@ -26,12 +26,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Siempre revalidar el sitemap
+    // Revalidar el sitemap - forzar regeneración completa
     revalidatePath("/sitemap.xml")
+    revalidatePath("/")
 
     return NextResponse.json({ 
       success: true, 
-      revalidated: { paths: paths || [], tags: tags || [] }
+      revalidated: { paths: paths || [], tags: tags || [], sitemap: true }
     })
   } catch (error) {
     console.error("Error revalidating:", error)
