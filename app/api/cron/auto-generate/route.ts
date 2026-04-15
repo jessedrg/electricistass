@@ -362,21 +362,26 @@ export async function GET(request: Request) {
     console.log(`[CRON] Using service: ${service.name} (${service.slug})`)
 
     // Step 3: Find cities that don't have pages for this service yet
+    // Get ALL existing page slugs that start with "electricista-"
     const { data: existingPages, error: pagesError } = await supabase
       .from("pages")
-      .select("city_id")
-      .eq("service_id", service.id)
+      .select("slug")
+      .like("slug", "electricista-%")
 
     if (pagesError) {
       console.error("[CRON] Error fetching existing pages:", pagesError)
       return NextResponse.json({ error: "Failed to fetch pages" }, { status: 500 })
     }
 
-    const citiesWithPages = new Set(existingPages?.map(p => p.city_id) || [])
-    console.log(`[CRON] Cities with existing pages: ${citiesWithPages.size}`)
+    // Create set of city slugs that already have pages
+    // slug format is "electricista-{city-slug}", so extract city slug
+    const existingSlugs = new Set(
+      existingPages?.map(p => p.slug.replace("electricista-", "")) || []
+    )
+    console.log(`[CRON] Existing electricista pages: ${existingSlugs.size}`)
     
-    // Filter to cities without pages
-    const citiesWithoutPages = cities.filter(city => !citiesWithPages.has(city.id))
+    // Filter to cities without pages (by slug, not city_id)
+    const citiesWithoutPages = cities.filter(city => !existingSlugs.has(city.slug))
     console.log(`[CRON] Cities without pages: ${citiesWithoutPages.length}`)
 
     if (citiesWithoutPages.length === 0) {
