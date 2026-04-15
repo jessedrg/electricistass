@@ -124,6 +124,14 @@ interface BulkProgress {
   results: { pageId: string; pageName: string; success: boolean; error?: string }[]
 }
 
+interface Pagination {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+  hasMore: boolean
+}
+
 // Plantillas de titulos SEO simples (max 60 caracteres)
 const TITLE_TEMPLATES = [
   "{servicio} en {ciudad}",
@@ -173,8 +181,13 @@ export default function PaginasPage() {
   const [pages, setPages] = useState<Page[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
+  const [searchInput, setSearchInput] = useState("") // For debouncing
   const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [imageFilter, setImageFilter] = useState<string>("all") // all, with, without
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [pagination, setPagination] = useState<Pagination>({
+    page: 1, limit: 50, total: 0, totalPages: 0, hasMore: false
+  })
   
   // Bulk publish state
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false)
@@ -203,8 +216,22 @@ export default function PaginasPage() {
   const [fixImagesLoading, setFixImagesLoading] = useState(false)
   const [pagesWithoutImages, setPagesWithoutImages] = useState(0)
 
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput)
+      setPagination(prev => ({ ...prev, page: 1 })) // Reset to page 1 on search
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchInput])
+
+  // Fetch pages when filters change
   useEffect(() => {
     fetchPages()
+  }, [search, statusFilter, imageFilter, pagination.page])
+
+  // Initial load for other data
+  useEffect(() => {
     fetchPagesWithoutMaps()
     fetchPagesWithoutImages()
   }, [])
@@ -234,11 +261,27 @@ export default function PaginasPage() {
   }
 
   const fetchPages = async () => {
+    setLoading(true)
     try {
-      const res = await fetch("/api/admin/pages/list")
+      const params = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
+      })
+      if (statusFilter !== "all") params.set("status", statusFilter)
+      if (search) params.set("search", search)
+      if (imageFilter === "with") params.set("hasImage", "true")
+      if (imageFilter === "without") params.set("hasImage", "false")
+
+      const res = await fetch(`/api/admin/pages/list?${params}`)
       if (res.ok) {
         const data = await res.json()
         setPages(data.pages || [])
+        setPagination(prev => ({
+          ...prev,
+          total: data.pagination?.total || 0,
+          totalPages: data.pagination?.totalPages || 0,
+          hasMore: data.pagination?.hasMore || false
+        }))
       }
     } catch (error) {
       console.error("Error fetching pages:", error)
@@ -766,16 +809,12 @@ export default function PaginasPage() {
     }
   }
 
-  const filteredPages = pages.filter(page => {
-    const matchesSearch = 
-      page.slug.toLowerCase().includes(search.toLowerCase()) ||
-      page.services?.name.toLowerCase().includes(search.toLowerCase()) ||
-      page.cities?.name.toLowerCase().includes(search.toLowerCase())
-    
-    const matchesStatus = statusFilter === "all" || page.status === statusFilter
-    
-    return matchesSearch && matchesStatus
-  })
+  // Pages are now filtered server-side, no need for client filtering
+  const goToPage = (newPage: number) => {
+    if (newPage >= 1 && newPage <= pagination.totalPages) {
+      setPagination(prev => ({ ...prev, page: newPage }))
+    }
+  }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -799,22 +838,19 @@ export default function PaginasPage() {
     })
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Todas las Páginas</h1>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            Todas las Paginas
+            {loading && <Loader2 className="h-5 w-5 animate-spin text-emerald-600" />}
+          </h1>
           <p className="text-muted-foreground mt-1">
-            {pages.length} páginas en total - {pages.filter(p => p.status === "published").length} publicadas
+            {pagination.total.toLocaleString("es-ES")} paginas encontradas
+            {statusFilter !== "all" && ` (${statusFilter})`}
+            {imageFilter !== "all" && ` - ${imageFilter === "with" ? "con imagen" : "sin imagen"}`}
           </p>
         </div>
         <div className="flex gap-2">
@@ -1122,25 +1158,54 @@ export default function PaginasPage() {
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex gap-4">
-            <div className="flex-1 relative">
+          <div className="flex gap-4 flex-wrap">
+            <div className="flex-1 min-w-64 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por servicio, ciudad o URL..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar por slug (ej: electricista-madrid)..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-10"
               />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filtrar por estado" />
+            <Select value={statusFilter} onValueChange={(value) => {
+              setStatusFilter(value)
+              setPagination(prev => ({ ...prev, page: 1 }))
+            }}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Estado" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos los estados</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="published">Publicadas</SelectItem>
                 <SelectItem value="draft">Borradores</SelectItem>
                 <SelectItem value="pending">Pendientes</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={imageFilter} onValueChange={(value) => {
+              setImageFilter(value)
+              setPagination(prev => ({ ...prev, page: 1 }))
+            }}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Imagen" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                <SelectItem value="with">Con imagen</SelectItem>
+                <SelectItem value="without">Sin imagen</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select 
+              value={pagination.limit.toString()} 
+              onValueChange={(value) => setPagination(prev => ({ ...prev, limit: parseInt(value), page: 1 }))}
+            >
+              <SelectTrigger className="w-28">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="25">25/pag</SelectItem>
+                <SelectItem value="50">50/pag</SelectItem>
+                <SelectItem value="100">100/pag</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -1161,14 +1226,23 @@ export default function PaginasPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredPages.length === 0 ? (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-12">
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+                      <span className="text-muted-foreground">Cargando paginas...</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : pages.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                    No se encontraron páginas
+                    No se encontraron paginas con estos filtros
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredPages.map((page) => (
+                pages.map((page) => (
                   <TableRow key={page.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -1272,6 +1346,67 @@ export default function PaginasPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Mostrando {((pagination.page - 1) * pagination.limit) + 1} - {Math.min(pagination.page * pagination.limit, pagination.total)} de {pagination.total.toLocaleString("es-ES")} paginas
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => goToPage(1)}
+              disabled={pagination.page === 1 || loading}
+            >
+              Primera
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => goToPage(pagination.page - 1)}
+              disabled={pagination.page === 1 || loading}
+            >
+              Anterior
+            </Button>
+            <div className="flex items-center gap-1 px-2">
+              <Input
+                type="number"
+                min={1}
+                max={pagination.totalPages}
+                value={pagination.page}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value)
+                  if (val >= 1 && val <= pagination.totalPages) {
+                    goToPage(val)
+                  }
+                }}
+                className="w-16 h-8 text-center"
+              />
+              <span className="text-sm text-muted-foreground">
+                de {pagination.totalPages}
+              </span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => goToPage(pagination.page + 1)}
+              disabled={pagination.page >= pagination.totalPages || loading}
+            >
+              Siguiente
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => goToPage(pagination.totalPages)}
+              disabled={pagination.page >= pagination.totalPages || loading}
+            >
+              Ultima
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
