@@ -33,6 +33,7 @@ import {
   FileText,
   Trash2,
   ImageOff,
+  ImageIcon,
   Users,
   Sparkles,
   Rocket,
@@ -197,10 +198,15 @@ export default function PaginasPage() {
   // Generate maps state
   const [generateMapsLoading, setGenerateMapsLoading] = useState(false)
   const [pagesWithoutMaps, setPagesWithoutMaps] = useState(0)
+  
+  // Fix images state
+  const [fixImagesLoading, setFixImagesLoading] = useState(false)
+  const [pagesWithoutImages, setPagesWithoutImages] = useState(0)
 
   useEffect(() => {
     fetchPages()
     fetchPagesWithoutMaps()
+    fetchPagesWithoutImages()
   }, [])
 
   const fetchPagesWithoutMaps = async () => {
@@ -212,6 +218,18 @@ export default function PaginasPage() {
       }
     } catch (error) {
       console.error("Error fetching maps count:", error)
+    }
+  }
+
+  const fetchPagesWithoutImages = async () => {
+    try {
+      const res = await fetch("/api/admin/fix-images")
+      if (res.ok) {
+        const data = await res.json()
+        setPagesWithoutImages(data.pagesWithoutImages || 0)
+      }
+    } catch (error) {
+      console.error("Error fetching images count:", error)
     }
   }
 
@@ -674,6 +692,38 @@ export default function PaginasPage() {
     }
   }
 
+  // Fix broken images and publish pages
+  const fixImagesAndPublish = async () => {
+    if (pagesWithoutImages === 0) {
+      alert("Todas las paginas ya tienen imagenes")
+      return
+    }
+
+    setFixImagesLoading(true)
+    try {
+      const res = await fetch("/api/admin/fix-images", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ publish: true, limit: 100 })
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        alert(`Imagenes arregladas:\n- Arregladas: ${data.fixed}\n- Publicadas: ${data.published}\n- Fallidas: ${data.failed}\n\n${data.errors?.length > 0 ? "Errores:\n" + data.errors.slice(0, 5).join("\n") : ""}`)
+        fetchPagesWithoutImages()
+        fetchPages()
+      } else {
+        alert("Error: " + (data.error || "Error desconocido"))
+      }
+    } catch (error) {
+      console.error("Error fixing images:", error)
+      alert("Error de conexion al arreglar imagenes")
+    } finally {
+      setFixImagesLoading(false)
+    }
+  }
+
   const refreshSitemap = async () => {
     setRefreshingSitemap(true)
     try {
@@ -813,6 +863,20 @@ export default function PaginasPage() {
               : pagesWithoutMaps > 0 
                 ? `Generar Mapas (${pagesWithoutMaps})` 
                 : "Mapas OK"
+            }
+          </Button>
+          <Button 
+            onClick={fixImagesAndPublish}
+            variant="outline"
+            disabled={fixImagesLoading || pagesWithoutImages === 0}
+            className="border-rose-300 text-rose-600 hover:bg-rose-50"
+          >
+            <ImageIcon className={`h-4 w-4 mr-2 ${fixImagesLoading ? "animate-spin" : ""}`} />
+            {fixImagesLoading 
+              ? "Arreglando..." 
+              : pagesWithoutImages > 0 
+                ? `Arreglar Imgs + Publicar (${pagesWithoutImages})` 
+                : "Imagenes OK"
             }
           </Button>
           <Button asChild className="bg-emerald-600 hover:bg-emerald-700">
