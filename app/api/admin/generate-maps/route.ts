@@ -165,9 +165,9 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const { pageIds } = body // Si se pasan IDs especificos, solo procesar esos
+    const { pageIds, batchSize = 100, offset = 0 } = body
 
-    // Buscar paginas sin coordenadas
+    // Buscar paginas sin coordenadas (sin limite para procesar todas)
     let query = supabase
       .from("pages")
       .select("id, slug, latitude, longitude, city_id")
@@ -177,7 +177,9 @@ export async function POST(request: Request) {
       query = query.in("id", pageIds)
     }
 
-    const { data: pages, error: pagesError } = await query.limit(50)
+    // Usar paginacion para procesar en lotes
+    const { data: pages, error: pagesError } = await query
+      .range(offset, offset + batchSize - 1)
 
     if (pagesError) {
       console.error("Error fetching pages:", pagesError)
@@ -235,12 +237,14 @@ export async function POST(request: Request) {
           const cachedCoords = SPANISH_CITIES_COORDS[normalizedCity]
           coords = { lat: cachedCoords.lat, lng: cachedCoords.lng, zoom: 13 }
         } else {
-          // Buscar coordenadas con Nominatim
+          // Buscar coordenadas con Nominatim (solo si no esta en cache)
           const province = city?.province || undefined
           coords = await getCoordinates(cityNameForSearch.replace(/-/g, " "), province)
           
-          // Esperar un poco para no sobrecargar Nominatim (limite de 1 request/segundo)
-          await new Promise(r => setTimeout(r, 1100))
+          // Solo esperar si hubo llamada a Nominatim (para respetar rate limit)
+          if (coords) {
+            await new Promise(r => setTimeout(r, 200)) // Reducido a 200ms
+          }
         }
       }
 
@@ -279,12 +283,20 @@ export async function POST(request: Request) {
       }
     }
 
+    // Verificar si hay mas paginas
+    const { count: remainingCount } = await supabase
+      .from("pages")
+      .select("id", { count: "exact", head: true })
+      .or("latitude.is.null,longitude.is.null")
+
     return NextResponse.json({
       message: "Generacion de mapas completada",
-      total: pages.length,
+      processed: pages.length,
       updated: results.updated,
       failed: results.failed,
-      errors: results.errors
+      errors: results.errors,
+      remaining: remainingCount || 0,
+      hasMore: (remainingCount || 0) > 0
     })
 
   } catch (error) {
