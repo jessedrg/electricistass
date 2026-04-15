@@ -447,29 +447,29 @@ export async function GET(request: Request) {
         const cityImages = generateCityImageUrls(city.name)
 
         // Update page with generated content - set as DRAFT
-        // Use ONLY columns that exist in the pages table (from create-all-tables.sql)
+        // ONLY columns from create-all-tables.sql
         const now = new Date().toISOString()
         const { error: updateError } = await supabase
           .from("pages")
           .update({
-            // SEO
+            // SEO (verified columns)
             title: content.title,
             meta_description: content.meta_description,
             h1: content.h1,
             h1_variant: content.h1_variant,
             highlight: content.highlight,
             
-            // Contenido principal
+            // Contenido principal (verified columns)
             intro_text: content.intro_text,
             intro_highlight: content.highlight_variant,
             city_specific_content: content.intro_text_variant,
             content_tone: content.content_tone,
             
-            // Seccion extra
+            // Seccion extra (verified columns)
             extra_section_type: content.extra_section?.type || null,
             extra_section_content: content.extra_section?.content || null,
             
-            // CTAs (columnas correctas de la tabla)
+            // CTAs (verified columns from schema)
             cta_main: content.cta_buttons?.[0]?.text || "Llamar ahora",
             cta_secondary: content.cta_buttons?.[1]?.text || "Solicitar presupuesto",
             cta_button_text: content.cta_buttons?.[2]?.text || "Contactar",
@@ -478,22 +478,22 @@ export async function GET(request: Request) {
             final_cta_title: content.final_ctas?.[0]?.title || null,
             final_cta_subtitle: content.final_ctas?.[0]?.subtitle || null,
             
-            // Datos locales
-            local_facts: content.local_facts,
-            common_problems: content.services_list,
+            // Datos locales JSONB (verified columns)
+            local_facts: content.local_facts || {},
+            common_problems: content.services_list || [],
             
-            // Contenido estructurado
-            faqs: content.faqs,
-            testimonials: content.reviews,
-            services_offered: content.services_list,
+            // Contenido estructurado JSONB (verified columns)
+            faqs: content.faqs || [],
+            testimonials: content.reviews || [],
+            services_offered: content.services_list || [],
             
-            // Diseno
+            // Diseno JSONB (verified columns)
             design_variation: designVariation,
             hero_image_url: cityImages.hero,
-            gallery_images: cityImages.gallery,
+            gallery_images: cityImages.gallery || [],
             
-            // Estado
-            is_neighborhood: content.is_neighborhood,
+            // Estado (verified columns)
+            is_neighborhood: content.is_neighborhood || false,
             status: "draft",
             updated_at: now,
           })
