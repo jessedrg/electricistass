@@ -75,9 +75,9 @@ export async function Footer() {
                 <Phone className="h-4 w-4" />
                 {PHONE_DISPLAY}
               </a>
-              <a href="mailto:info@electricistass.com" className="flex items-center gap-2.5 hover:text-white transition-colors">
+              <a href="mailto:info@instalacioneselectricasjj.com" className="flex items-center gap-2.5 hover:text-white transition-colors">
                 <Mail className="h-4 w-4" />
-                info@electricistass.com
+                info@instalacioneselectricasjj.com
               </a>
               <span className="flex items-center gap-2.5">
                 <MapPin className="h-4 w-4" />
@@ -177,8 +177,8 @@ export async function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-gray-800 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
           <p>&copy; {new Date().getFullYear()} Electricistas 24H. Todos los derechos reservados.</p>
-          <a href="https://www.electricistass.com" className="hover:text-emerald-400 transition-colors">
-            www.electricistass.com
+          <a href="https://www.instalacioneselectricasjj.com" className="hover:text-emerald-400 transition-colors">
+            www.instalacioneselectricasjj.com
           </a>
         </div>
       </div>

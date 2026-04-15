@@ -19,9 +19,9 @@ export default function AvisoLegalPage() {
             </p>
             <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
               <li><strong>Denominación social:</strong> Electricistas 24H</li>
-              <li><strong>Dominio web:</strong> www.electricistass.com</li>
+              <li><strong>Dominio web:</strong> www.instalacioneselectricasjj.com</li>
               <li><strong>Teléfono:</strong> 900 433 214</li>
-              <li><strong>Email:</strong> info@electricistass.com</li>
+              <li><strong>Email:</strong> info@instalacioneselectricasjj.com</li>
               <li><strong>Actividad:</strong> Servicios de reparación y mantenimiento del hogar</li>
             </ul>
           </section>
@@ -29,7 +29,7 @@ export default function AvisoLegalPage() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">2. Objeto</h2>
             <p className="text-muted-foreground">
-              El presente aviso legal regula el uso del sitio web www.electricistass.com, del que es titular Electricistas 24H. La navegación por el sitio web atribuye la condición de usuario del mismo e implica la aceptación plena y sin reservas de todas y cada una de las disposiciones incluidas en este Aviso Legal.
+              El presente aviso legal regula el uso del sitio web www.instalacioneselectricasjj.com, del que es titular Electricistas 24H. La navegación por el sitio web atribuye la condición de usuario del mismo e implica la aceptación plena y sin reservas de todas y cada una de las disposiciones incluidas en este Aviso Legal.
             </p>
           </section>
 
@@ -64,7 +64,7 @@ export default function AvisoLegalPage() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">7. Contacto</h2>
             <p className="text-muted-foreground">
-              Para cualquier consulta relacionada con este aviso legal, puede contactar con nosotros a través del teléfono <strong>900 433 214</strong> o enviando un email a <strong>info@electricistass.com</strong>.
+              Para cualquier consulta relacionada con este aviso legal, puede contactar con nosotros a través del teléfono <strong>900 433 214</strong> o enviando un email a <strong>info@instalacioneselectricasjj.com</strong>.
             </p>
           </section>
 
