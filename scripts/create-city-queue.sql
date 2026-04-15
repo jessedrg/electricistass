@@ -6,7 +6,7 @@
 
 -- Crear tabla de cola de ciudades
 CREATE TABLE IF NOT EXISTS city_generation_queue (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   
   -- Ciudad info
