@@ -329,6 +329,16 @@ export async function GET(request: Request) {
       })
     }
 
+    // Step 1.5: Clean up stuck "generating" pages (older than 10 minutes)
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString()
+    await supabase
+      .from("pages")
+      .delete()
+      .eq("status", "generating")
+      .lt("created_at", tenMinutesAgo)
+    
+    console.log("[CRON] Cleaned up stuck generating pages")
+
     // Step 2: Get the main service (electricistas)
     const { data: services, error: servicesError } = await supabase
       .from("services")
@@ -428,6 +438,7 @@ export async function GET(request: Request) {
         const cityImages = generateCityImageUrls(city.name)
 
         // Update page with generated content - set as DRAFT
+        // Only use columns that exist in the pages table
         const now = new Date().toISOString()
         const { error: updateError } = await supabase
           .from("pages")
@@ -437,26 +448,12 @@ export async function GET(request: Request) {
             h1: content.h1,
             h1_variant: content.h1_variant,
             intro_text: content.intro_text,
-            intro_text_variant: content.intro_text_variant,
-            intro_highlight: content.highlight,
-            local_facts: content.local_facts,
-            cta_buttons: content.cta_buttons,
-            urgency_messages: content.urgency_messages,
-            badges: content.badges,
-            final_ctas: content.final_ctas,
+            content: content.intro_text_variant, // Store variant in content field
             faqs: content.faqs,
             testimonials: content.reviews,
-            services_offered: content.services_list,
-            benefits: content.benefits,
-            extra_section: content.extra_section,
-            keywords: content.keywords,
-            content_tone: content.content_tone,
-            is_neighborhood: content.is_neighborhood,
-            parent_city: content.parent_city,
-            parent_city_slug: content.parent_city_slug,
-            design_variation: designVariation,
-            hero_image_url: cityImages.hero,
-            gallery_images: cityImages.gallery,
+            common_problems: content.services_list, // Store services as common_problems
+            cta_primary: content.cta_buttons?.[0]?.text || "Llamar ahora",
+            cta_secondary: content.cta_buttons?.[1]?.text || "Solicitar presupuesto",
             status: "draft", // Set as draft, NOT published
             updated_at: now,
           })
