@@ -266,16 +266,221 @@ const SPANISH_CITIES_COORDS: Record<string, { lat: number; lng: number }> = {
   "candelaria": { lat: 28.3544, lng: -16.3728 },
   "guia-de-isora": { lat: 28.2111, lng: -16.7789 },
   "tacoronte": { lat: 28.4761, lng: -16.4103 },
+  // Ciudades con errores 429 - Huelva
+  "isla-cristina": { lat: 37.2000, lng: -7.3167 },
+  "islacristina": { lat: 37.2000, lng: -7.3167 },
+  "ayamonte": { lat: 37.2147, lng: -7.4058 },
+  "lepe": { lat: 37.2547, lng: -7.2042 },
+  "cartaya": { lat: 37.2833, lng: -7.1500 },
+  "punta-umbria": { lat: 37.1833, lng: -6.9667 },
+  "moguer": { lat: 37.2750, lng: -6.8389 },
+  "almonte": { lat: 37.2667, lng: -6.5167 },
+  "bollullos-par-del-condado": { lat: 37.3392, lng: -6.5392 },
+  "la-palma-del-condado": { lat: 37.3833, lng: -6.5500 },
+  "valverde-del-camino": { lat: 37.5750, lng: -6.7583 },
+  "nerva": { lat: 37.7000, lng: -6.5500 },
+  // Granada
+  "la-zubia": { lat: 37.1206, lng: -3.5861 },
+  "zubia": { lat: 37.1206, lng: -3.5861 },
+  "armilla": { lat: 37.1417, lng: -3.6194 },
+  "maracena": { lat: 37.2083, lng: -3.6333 },
+  "albolote": { lat: 37.2333, lng: -3.6556 },
+  "atarfe": { lat: 37.2250, lng: -3.6889 },
+  "santa-fe": { lat: 37.1889, lng: -3.7194 },
+  "las-gabias": { lat: 37.1333, lng: -3.6667 },
+  "ogijares": { lat: 37.1194, lng: -3.6056 },
+  "huetor-vega": { lat: 37.1500, lng: -3.5667 },
+  "monachil": { lat: 37.1167, lng: -3.5333 },
+  "loja": { lat: 37.1689, lng: -4.1514 },
+  "baza": { lat: 37.4900, lng: -2.7725 },
+  "guadix": { lat: 37.3000, lng: -3.1333 },
+  // Fuerteventura y Lanzarote
+  "la-oliva": { lat: 28.6108, lng: -13.9278 },
+  "oliva": { lat: 28.6108, lng: -13.9278 },
+  "antigua": { lat: 28.4167, lng: -14.0167 },
+  "tuineje": { lat: 28.3250, lng: -14.0500 },
+  "pajara": { lat: 28.3500, lng: -14.1083 },
+  "betancuria": { lat: 28.4250, lng: -14.0583 },
+  "tias": { lat: 28.9500, lng: -13.6500 },
+  "yaiza": { lat: 28.9583, lng: -13.7667 },
+  "teguise": { lat: 29.0583, lng: -13.5583 },
+  "san-bartolome": { lat: 29.0000, lng: -13.6167 },
+  "haria": { lat: 29.1417, lng: -13.4917 },
+  "tinajo": { lat: 29.0667, lng: -13.6833 },
+  // Ibiza y Formentera
+  "sant-josep-de-sa-talaia": { lat: 38.9214, lng: 1.2886 },
+  "sant-josep": { lat: 38.9214, lng: 1.2886 },
+  "sant-antoni-de-portmany": { lat: 38.9803, lng: 1.3017 },
+  "sant-antoni": { lat: 38.9803, lng: 1.3017 },
+  "santa-eularia-des-riu": { lat: 38.9847, lng: 1.5328 },
+  "santa-eulalia": { lat: 38.9847, lng: 1.5328 },
+  "sant-joan-de-labritja": { lat: 39.0750, lng: 1.5111 },
+  "formentera": { lat: 38.7083, lng: 1.4361 },
+  "la-savina": { lat: 38.7333, lng: 1.4167 },
+  // Castilla-La Mancha
+  "manzanares": { lat: 38.9994, lng: -3.3711 },
+  "valdepenas": { lat: 38.7622, lng: -3.3847 },
+  "tomelloso": { lat: 39.1522, lng: -3.0239 },
+  "alcazar-de-san-juan": { lat: 39.3903, lng: -3.2081 },
+  "puertollano": { lat: 38.6869, lng: -4.1072 },
+  "daimiel": { lat: 39.0711, lng: -3.6175 },
+  "la-solana": { lat: 38.9417, lng: -3.2361 },
+  "campo-de-criptana": { lat: 39.4047, lng: -3.1244 },
+  "socuellamos": { lat: 39.2881, lng: -2.7919 },
+  "villarrobledo": { lat: 39.2686, lng: -2.6014 },
+  "la-roda": { lat: 39.2072, lng: -2.1603 },
+  "hellin": { lat: 38.5119, lng: -1.6983 },
+  "almansa": { lat: 38.8689, lng: -1.0972 },
+  "illescas": { lat: 40.1239, lng: -3.8472 },
+  "seseña": { lat: 40.1056, lng: -3.6983 },
+  "ocaña": { lat: 39.9567, lng: -3.4989 },
+  "madridejos": { lat: 39.4700, lng: -3.5331 },
+  "quintanar-de-la-orden": { lat: 39.5931, lng: -3.0417 },
+  "azuqueca-de-henares": { lat: 40.5658, lng: -3.2672 },
+  "siguenza": { lat: 41.0681, lng: -2.6389 },
+  // Sevilla adicionales
+  "lebrija": { lat: 36.9217, lng: -6.0769 },
+  "camas": { lat: 37.4033, lng: -6.0328 },
+  "san-juan-de-aznalfarache": { lat: 37.3667, lng: -6.0333 },
+  "tomares": { lat: 37.3728, lng: -6.0428 },
+  "bormujos": { lat: 37.3728, lng: -6.0706 },
+  "gelves": { lat: 37.3433, lng: -6.0244 },
+  "coria-del-rio": { lat: 37.2867, lng: -6.0542 },
+  "la-rinconada": { lat: 37.4853, lng: -5.9806 },
+  "mairena-del-aljarafe": { lat: 37.3442, lng: -6.0639 },
+  "mairena-del-alcor": { lat: 37.3744, lng: -5.7481 },
+  "el-viso-del-alcor": { lat: 37.3903, lng: -5.7186 },
+  "lora-del-rio": { lat: 37.6583, lng: -5.5292 },
+  "cantillana": { lat: 37.6069, lng: -5.8247 },
+  "sanlucar-la-mayor": { lat: 37.3869, lng: -6.2028 },
+  // Alicante adicionales
+  "pilar-de-la-horadada": { lat: 37.8650, lng: -0.7917 },
+  "rojales": { lat: 38.0872, lng: -0.7231 },
+  "guardamar-del-segura": { lat: 38.0897, lng: -0.6542 },
+  "santa-pola": { lat: 38.1914, lng: -0.5564 },
+  "crevillent": { lat: 38.2500, lng: -0.8100 },
+  "aspe": { lat: 38.3450, lng: -0.7672 },
+  "novelda": { lat: 38.3847, lng: -0.7678 },
+  "villena": { lat: 38.6367, lng: -0.8661 },
+  "ibi": { lat: 38.6258, lng: -0.5722 },
+  "castalla": { lat: 38.5978, lng: -0.6719 },
+  "cocentaina": { lat: 38.7431, lng: -0.4375 },
+  "muro-de-alcoy": { lat: 38.7803, lng: -0.4339 },
+  "calpe": { lat: 38.6447, lng: 0.0444 },
+  "altea": { lat: 38.5989, lng: -0.0519 },
+  "alfaz-del-pi": { lat: 38.5878, lng: -0.1006 },
+  "la-nucia": { lat: 38.6119, lng: -0.1278 },
+  "finestrat": { lat: 38.5658, lng: -0.2178 },
+  "villajoyosa": { lat: 38.5069, lng: -0.2336 },
+  "el-campello": { lat: 38.4289, lng: -0.3972 },
+  "mutxamel": { lat: 38.4139, lng: -0.4394 },
+  "san-vicente-del-raspeig": { lat: 38.3956, lng: -0.5258 },
+  "san-juan-de-alicante": { lat: 38.4019, lng: -0.4361 },
+  // Castellon adicionales
+  "benicarlo": { lat: 40.4167, lng: 0.4250 },
+  "vinaros": { lat: 40.4706, lng: 0.4742 },
+  "benicarlos": { lat: 40.4167, lng: 0.4250 },
+  "la-vall-d-uixo": { lat: 39.8264, lng: -0.2319 },
+  "vall-d-uixo": { lat: 39.8264, lng: -0.2319 },
+  "vila-real": { lat: 39.9383, lng: -0.1006 },
+  "vilareal": { lat: 39.9383, lng: -0.1006 },
+  "burriana": { lat: 39.8892, lng: -0.0847 },
+  "almassora": { lat: 39.9472, lng: -0.0556 },
+  "onda": { lat: 39.9628, lng: -0.2603 },
+  "nules": { lat: 39.8536, lng: -0.1531 },
+  "segorbe": { lat: 39.8517, lng: -0.4869 },
+  "benicassim": { lat: 40.0542, lng: 0.0639 },
+  "oropesa-del-mar": { lat: 40.0956, lng: 0.1375 },
+  // Mas Valencia
+  "cullera": { lat: 39.1636, lng: -0.2544 },
+  "sueca": { lat: 39.2028, lng: -0.3108 },
+  "alzira": { lat: 39.1511, lng: -0.4350 },
+  "carcaixent": { lat: 39.1236, lng: -0.4536 },
+  "xativa": { lat: 38.9903, lng: -0.5186 },
+  "ontinyent": { lat: 38.8219, lng: -0.6067 },
+  "oliva": { lat: 38.9194, lng: -0.1217 },
+  "xeraco": { lat: 39.0333, lng: -0.2167 },
+  "tavernes-de-la-valldigna": { lat: 39.0736, lng: -0.2667 },
+  "lliria": { lat: 39.6261, lng: -0.5978 },
+  "betera": { lat: 39.5908, lng: -0.4611 },
+  // Otras que faltan
+  "calafell": { lat: 41.2000, lng: 1.5667 },
+  "cunit": { lat: 41.1972, lng: 1.6361 },
+  "el-morell": { lat: 41.1500, lng: 1.1833 },
+  "constantí": { lat: 41.1500, lng: 1.2000 },
+  "constanti": { lat: 41.1500, lng: 1.2000 },
+  "la-canonja": { lat: 41.1167, lng: 1.1833 },
+  "mont-roig-del-camp": { lat: 41.0833, lng: 0.9667 },
+  "vandellòs-i-l-hospitalet-de-l-infant": { lat: 40.9833, lng: 0.9000 },
+  "l-ametlla-de-mar": { lat: 40.8833, lng: 0.8000 },
+  // Aragon
+  "calatayud": { lat: 41.3533, lng: -1.6431 },
+  "ejea-de-los-caballeros": { lat: 42.1264, lng: -1.1372 },
+  "tarazona": { lat: 41.9042, lng: -1.7236 },
+  "utebo": { lat: 41.7167, lng: -0.9917 },
+  "cuarte-de-huerva": { lat: 41.5986, lng: -0.9250 },
+  "caspe": { lat: 41.2347, lng: -0.0400 },
+  "alcaniz": { lat: 41.0500, lng: -0.1333 },
+  "andorra": { lat: 40.9764, lng: -0.4478 },
+  "monzon": { lat: 41.9111, lng: 0.1933 },
+  "barbastro": { lat: 42.0353, lng: 0.1267 },
+  "fraga": { lat: 41.5208, lng: 0.3500 },
+  "binefar": { lat: 41.8528, lng: 0.3000 },
+  "jaca": { lat: 42.5697, lng: -0.5500 },
+  "sabinanigo": { lat: 42.5181, lng: -0.3639 },
+}
+
+// Funcion auxiliar para normalizar nombres de ciudad
+function normalizeCity(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Quitar acentos
+    .replace(/[''`]/g, "") // Quitar apostrofes
+    .replace(/\s+/g, "-") // Espacios a guiones
+    .replace(/[^a-z0-9-]/g, "") // Solo letras, numeros y guiones
+}
+
+// Buscar en cache con multiples variantes
+function findInCache(cityName: string): { lat: number; lng: number } | null {
+  const normalized = normalizeCity(cityName)
+  
+  // Busqueda exacta
+  if (SPANISH_CITIES_COORDS[normalized]) {
+    return SPANISH_CITIES_COORDS[normalized]
+  }
+  
+  // Busqueda sin guiones
+  const withoutDashes = normalized.replace(/-/g, "")
+  for (const [key, coords] of Object.entries(SPANISH_CITIES_COORDS)) {
+    if (key.replace(/-/g, "") === withoutDashes) {
+      return coords
+    }
+  }
+  
+  // Busqueda parcial - si el cache contiene la ciudad o viceversa
+  for (const [key, coords] of Object.entries(SPANISH_CITIES_COORDS)) {
+    const keyNoDashes = key.replace(/-/g, "")
+    if (keyNoDashes.includes(withoutDashes) || withoutDashes.includes(keyNoDashes)) {
+      // Solo si es una coincidencia significativa (>60% del nombre)
+      const minLen = Math.min(keyNoDashes.length, withoutDashes.length)
+      const maxLen = Math.max(keyNoDashes.length, withoutDashes.length)
+      if (minLen / maxLen > 0.6) {
+        return coords
+      }
+    }
+  }
+  
+  return null
 }
 
 // Funcion para obtener coordenadas usando Nominatim (OpenStreetMap)
 async function getCoordinates(cityName: string, province?: string): Promise<{ lat: number; lng: number; zoom: number } | null> {
   try {
-    // Primero buscar en nuestro cache
-    const normalizedCity = cityName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    if (SPANISH_CITIES_COORDS[normalizedCity]) {
-      const coords = SPANISH_CITIES_COORDS[normalizedCity]
-      return { lat: coords.lat, lng: coords.lng, zoom: 13 }
+    // Primero buscar en nuestro cache con multiples variantes
+    const cachedCoords = findInCache(cityName)
+    if (cachedCoords) {
+      return { lat: cachedCoords.lat, lng: cachedCoords.lng, zoom: 13 }
     }
 
     // Usar Nominatim API (gratuito, sin API key)
@@ -407,31 +612,20 @@ export async function POST(request: Request) {
       }
       
       if (!coords) {
-        // Primero intentar buscar en el cache local
-        const normalizedCity = cityNameForSearch.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        // Usar la funcion de cache mejorada
+        const cachedCoords = findInCache(cityNameForSearch)
         
-        // Buscar coincidencia exacta primero
-        if (SPANISH_CITIES_COORDS[normalizedCity]) {
-          const cachedCoords = SPANISH_CITIES_COORDS[normalizedCity]
+        if (cachedCoords) {
           coords = { lat: cachedCoords.lat, lng: cachedCoords.lng, zoom: 13 }
         } else {
-          // Buscar coincidencia parcial (por si el slug tiene mas info)
-          const cityKeys = Object.keys(SPANISH_CITIES_COORDS)
-          const partialMatch = cityKeys.find(key => normalizedCity.includes(key) || key.includes(normalizedCity))
+          // Solo llamar a Nominatim si no esta en cache (evitar rate limit)
+          const searchTerm = cityNameForSearch.replace(/-/g, " ")
+          const province = city?.province || undefined
+          coords = await getCoordinates(searchTerm, province)
           
-          if (partialMatch) {
-            const cachedCoords = SPANISH_CITIES_COORDS[partialMatch]
-            coords = { lat: cachedCoords.lat, lng: cachedCoords.lng, zoom: 13 }
-          } else {
-            // Buscar coordenadas con Nominatim (solo si no esta en cache)
-            const searchTerm = cityNameForSearch.replace(/-/g, " ")
-            const province = city?.province || undefined
-            coords = await getCoordinates(searchTerm, province)
-            
-            // Solo esperar si hubo llamada a Nominatim (para respetar rate limit)
-            if (coords) {
-              await new Promise(r => setTimeout(r, 200))
-            }
+          // Esperar para respetar rate limit de Nominatim
+          if (coords) {
+            await new Promise(r => setTimeout(r, 1000)) // 1 segundo entre llamadas
           }
         }
       }
