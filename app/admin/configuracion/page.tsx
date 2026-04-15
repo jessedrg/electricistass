@@ -3,6 +3,7 @@ import { verifyAdminSession } from "@/lib/admin/auth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle, AlertCircle, Database, Image, Bot, Globe } from "lucide-react"
+import { CronToggle } from "@/components/admin/cron-toggle"
 
 export default async function ConfigPage() {
   const isValid = await verifyAdminSession()
@@ -43,6 +44,9 @@ export default async function ConfigPage() {
           Estado de las integraciones y variables de entorno
         </p>
       </div>
+
+      {/* Cron Toggle */}
+      <CronToggle />
 
       <div className="grid gap-4">
         {configs.map((config) => (

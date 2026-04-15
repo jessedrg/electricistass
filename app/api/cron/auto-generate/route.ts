@@ -311,6 +311,23 @@ export async function GET(request: Request) {
   
   const supabase = await createClient()
   
+  // Check if cron is enabled in settings
+  const { data: cronSetting } = await supabase
+    .from("settings")
+    .select("value")
+    .eq("key", "cron_enabled")
+    .single()
+  
+  const cronEnabled = cronSetting?.value ?? true
+  
+  if (!cronEnabled) {
+    console.log("[CRON] Cron is PAUSED by admin setting")
+    return NextResponse.json({ 
+      message: "Cron is paused", 
+      paused: true 
+    })
+  }
+  
   try {
     // Step 1: Reset stuck "processing" items (older than 5 minutes)
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
