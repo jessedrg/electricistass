@@ -450,9 +450,8 @@ export async function GET(request: Request) {
           city.province || ""
         )
 
-        // Generate design variation
+        // Generate design variation (NO images - will be generated separately)
         const designVariation = generateDesignVariation(service.slug, city.slug)
-        const cityImages = generateCityImageUrls(city.name)
 
         // Update page with generated content - set as DRAFT
         // ONLY columns from create-all-tables.sql
@@ -495,10 +494,10 @@ export async function GET(request: Request) {
             testimonials: content.reviews || [],
             services_offered: content.services_list || [],
             
-            // Diseno JSONB (verified columns)
+            // Diseno JSONB (verified columns) - NO images, generate separately
             design_variation: designVariation,
-            hero_image_url: cityImages.hero,
-            gallery_images: cityImages.gallery || [],
+            hero_image_url: null,
+            gallery_images: null,
             
             // Estado (verified columns)
             is_neighborhood: content.is_neighborhood || false,
