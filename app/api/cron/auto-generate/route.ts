@@ -407,7 +407,7 @@ export async function GET(request: Request) {
       try {
         console.log(`[CRON] Generating page for ${service.name} in ${city.name}`)
 
-        const pageSlug = `${service.slug}/${city.slug}`
+        const pageSlug = `${service.slug}-${city.slug}`
         
         const { data: existingPage } = await supabase
           .from("pages")
