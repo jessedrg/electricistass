@@ -193,10 +193,27 @@ export default function PaginasPage() {
   const [regenImagesProgress, setRegenImagesProgress] = useState<BulkProgress>({
     current: 0, total: 0, currentPage: "", status: "idle", results: []
   })
+  
+  // Generate maps state
+  const [generateMapsLoading, setGenerateMapsLoading] = useState(false)
+  const [pagesWithoutMaps, setPagesWithoutMaps] = useState(0)
 
   useEffect(() => {
     fetchPages()
+    fetchPagesWithoutMaps()
   }, [])
+
+  const fetchPagesWithoutMaps = async () => {
+    try {
+      const res = await fetch("/api/admin/generate-maps")
+      if (res.ok) {
+        const data = await res.json()
+        setPagesWithoutMaps(data.pagesWithoutMaps || 0)
+      }
+    } catch (error) {
+      console.error("Error fetching maps count:", error)
+    }
+  }
 
   const fetchPages = async () => {
     try {
@@ -625,6 +642,38 @@ export default function PaginasPage() {
     fetchPages()
   }
 
+  // Generate maps for pages without coordinates
+  const generateMaps = async () => {
+    if (pagesWithoutMaps === 0) {
+      alert("Todas las paginas ya tienen coordenadas de mapa")
+      return
+    }
+
+    setGenerateMapsLoading(true)
+    try {
+      const res = await fetch("/api/admin/generate-maps", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({})
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        alert(`Mapas generados:\n- Actualizados: ${data.updated}\n- Fallidos: ${data.failed}\n\n${data.errors?.length > 0 ? "Errores:\n" + data.errors.join("\n") : ""}`)
+        fetchPagesWithoutMaps()
+        fetchPages()
+      } else {
+        alert("Error: " + (data.error || "Error desconocido"))
+      }
+    } catch (error) {
+      console.error("Error generating maps:", error)
+      alert("Error de conexion al generar mapas")
+    } finally {
+      setGenerateMapsLoading(false)
+    }
+  }
+
   const refreshSitemap = async () => {
     setRefreshingSitemap(true)
     try {
@@ -751,6 +800,20 @@ export default function PaginasPage() {
           >
             <Rocket className="h-4 w-4 mr-2" />
             Publicar en Bulk
+          </Button>
+          <Button 
+            onClick={generateMaps}
+            variant="outline"
+            disabled={generateMapsLoading || pagesWithoutMaps === 0}
+            className="border-cyan-300 text-cyan-600 hover:bg-cyan-50"
+          >
+            <Globe className={`h-4 w-4 mr-2 ${generateMapsLoading ? "animate-spin" : ""}`} />
+            {generateMapsLoading 
+              ? "Generando..." 
+              : pagesWithoutMaps > 0 
+                ? `Generar Mapas (${pagesWithoutMaps})` 
+                : "Mapas OK"
+            }
           </Button>
           <Button asChild className="bg-emerald-600 hover:bg-emerald-700">
             <Link href="/admin/nueva-pagina">
