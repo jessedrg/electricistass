@@ -182,7 +182,7 @@ VARIACIONES IMPORTANTES:
 - Mencionar que somos Electricistas 24H, empresa de confianza`
 
   const result = await generateText({
-    model: "anthropic/claude-sonnet-4-20250514",
+    model: "openai/gpt-4o-mini",
     prompt,
     output: Output.object({ schema: pageContentSchema }),
     maxOutputTokens: 8000,

@@ -4,8 +4,7 @@ import { generatePageContent, generateDesignVariation, generateCityImageUrls } f
 
 // Configuration
 const MIN_POPULATION = 10000 // Minimum population for cities
-const CITIES_PER_EXECUTION = 5 // How many cities to process per cron run
-const PAGES_PER_CITY = 1 // Generate 1 page per city per run (electricistas)
+const CITIES_PER_EXECUTION = 10 // How many cities to process per cron run
 
 export const maxDuration = 300 // 5 minutes max
 
