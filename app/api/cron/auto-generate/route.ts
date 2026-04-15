@@ -306,6 +306,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  console.log("[CRON] ========== AUTO-GENERATE STARTED ==========")
+  console.log("[CRON] Timestamp:", new Date().toISOString())
+  
   const supabase = await createClient()
   
   try {
@@ -322,7 +325,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Failed to fetch cities" }, { status: 500 })
     }
 
+    console.log(`[CRON] Found ${cities?.length || 0} cities with population >= ${MIN_POPULATION}`)
+
     if (!cities || cities.length === 0) {
+      console.log("[CRON] No cities found, exiting")
       return NextResponse.json({ 
         message: "No cities found with population >= 10,000",
         generated: 0 
@@ -364,9 +370,11 @@ export async function GET(request: Request) {
     }
 
     const citiesWithPages = new Set(existingPages?.map(p => p.city_id) || [])
+    console.log(`[CRON] Cities with existing pages: ${citiesWithPages.size}`)
     
     // Filter to cities without pages
     const citiesWithoutPages = cities.filter(city => !citiesWithPages.has(city.id))
+    console.log(`[CRON] Cities without pages: ${citiesWithoutPages.length}`)
 
     if (citiesWithoutPages.length === 0) {
       return NextResponse.json({ 
@@ -383,6 +391,7 @@ export async function GET(request: Request) {
       .map(({ city }) => city)
     
     const citiesToProcess = shuffled.slice(0, CITIES_PER_EXECUTION)
+    console.log(`[CRON] Processing ${citiesToProcess.length} cities:`, citiesToProcess.map(c => c.name).join(", "))
 
     const results = {
       success: 0,
@@ -438,23 +447,54 @@ export async function GET(request: Request) {
         const cityImages = generateCityImageUrls(city.name)
 
         // Update page with generated content - set as DRAFT
-        // Only use columns that exist in the pages table
+        // Use ONLY columns that exist in the pages table (from create-all-tables.sql)
         const now = new Date().toISOString()
         const { error: updateError } = await supabase
           .from("pages")
           .update({
+            // SEO
             title: content.title,
             meta_description: content.meta_description,
             h1: content.h1,
             h1_variant: content.h1_variant,
+            highlight: content.highlight,
+            
+            // Contenido principal
             intro_text: content.intro_text,
-            content: content.intro_text_variant, // Store variant in content field
+            intro_highlight: content.highlight_variant,
+            city_specific_content: content.intro_text_variant,
+            content_tone: content.content_tone,
+            
+            // Seccion extra
+            extra_section_type: content.extra_section?.type || null,
+            extra_section_content: content.extra_section?.content || null,
+            
+            // CTAs (columnas correctas de la tabla)
+            cta_main: content.cta_buttons?.[0]?.text || "Llamar ahora",
+            cta_secondary: content.cta_buttons?.[1]?.text || "Solicitar presupuesto",
+            cta_button_text: content.cta_buttons?.[2]?.text || "Contactar",
+            cta_urgency: content.urgency_messages?.[0] || null,
+            urgency_message: content.urgency_messages?.[1] || null,
+            final_cta_title: content.final_ctas?.[0]?.title || null,
+            final_cta_subtitle: content.final_ctas?.[0]?.subtitle || null,
+            
+            // Datos locales
+            local_facts: content.local_facts,
+            common_problems: content.services_list,
+            
+            // Contenido estructurado
             faqs: content.faqs,
             testimonials: content.reviews,
-            common_problems: content.services_list, // Store services as common_problems
-            cta_primary: content.cta_buttons?.[0]?.text || "Llamar ahora",
-            cta_secondary: content.cta_buttons?.[1]?.text || "Solicitar presupuesto",
-            status: "draft", // Set as draft, NOT published
+            services_offered: content.services_list,
+            
+            // Diseno
+            design_variation: designVariation,
+            hero_image_url: cityImages.hero,
+            gallery_images: cityImages.gallery,
+            
+            // Estado
+            is_neighborhood: content.is_neighborhood,
+            status: "draft",
             updated_at: now,
           })
           .eq("id", newPage.id)
