@@ -209,7 +209,10 @@ export default function PaginasPage() {
   })
   
   // Generate maps state
-  const [generateMapsLoading, setGenerateMapsLoading] = useState(false)
+  const [generateMapsDialogOpen, setGenerateMapsDialogOpen] = useState(false)
+  const [generateMapsProgress, setGenerateMapsProgress] = useState<BulkProgress & { remaining?: number }>({
+    current: 0, total: 0, currentPage: "", status: "idle", results: [], remaining: 0
+  })
   const [pagesWithoutMaps, setPagesWithoutMaps] = useState(0)
   
   // Fix images state
@@ -425,10 +428,16 @@ export default function PaginasPage() {
     })
   }
   
-  // Bulk publish function
+  // Bulk publish function - processes ALL pages without images
   const bulkPublish = async () => {
-    // Filtrar paginas sin imagen (tanto borradores como publicadas)
-    const pagesToProcess = pages.filter(p => !p.hero_image_url)
+    // Fetch ALL pages without images from the server
+    const res = await fetch("/api/admin/pages/bulk-list?hasImage=false&fields=id,slug,hero_image_url,services:service_id(name),cities:city_id(name)")
+    if (!res.ok) {
+      alert("Error obteniendo paginas")
+      return
+    }
+    const data = await res.json()
+    const pagesToProcess = data.pages || []
     
     if (pagesToProcess.length === 0) {
       alert("Todas las paginas ya tienen imagen")
@@ -445,8 +454,10 @@ export default function PaginasPage() {
     })
     
     for (let i = 0; i < pagesToProcess.length; i++) {
-      const page = pagesToProcess[i]
-      const pageName = `${page.services?.name || "Servicio"} en ${page.cities?.name || "Ciudad"}`
+      const page = pagesToProcess[i] as Page
+      const serviceName = page.services?.name || "Servicio"
+      const cityName = page.cities?.name || "Ciudad"
+      const pageName = `${serviceName} en ${cityName}`
       
       setBulkProgress(prev => ({
         ...prev,
@@ -458,8 +469,8 @@ export default function PaginasPage() {
       try {
         // 1. Generar imagen
         const blob = await generateImageForPage(
-          page.services?.name || "Cerrajero",
-          page.cities?.name || "Madrid"
+          serviceName,
+          cityName
         )
         
         setBulkProgress(prev => ({ ...prev, status: "uploading" }))
@@ -480,8 +491,6 @@ export default function PaginasPage() {
         setBulkProgress(prev => ({ ...prev, status: "publishing" }))
         
         // 3. Generar titulo SEO
-        const serviceName = page.services?.name || "Cerrajero"
-        const cityName = page.cities?.name || "Madrid"
         const seoTitle = generateSEOTitle(serviceName, cityName)
         
         // 4. Actualizar pagina con imagen, titulo y publicar (h1 se genera automaticamente en template)
@@ -539,10 +548,16 @@ export default function PaginasPage() {
     fetchPages()
   }
 
-  // Bulk generate SEO titles
+  // Bulk generate SEO titles - processes ALL published pages
   const bulkGenerateTitles = async () => {
-    // Procesar TODAS las paginas publicadas (no solo las filtradas)
-    const pagesToProcess = pages.filter(p => p.status === "published")
+    // Fetch ALL published pages from the server
+    const res = await fetch("/api/admin/pages/bulk-list?status=published&fields=id,slug,status,services:service_id(name),cities:city_id(name)")
+    if (!res.ok) {
+      alert("Error obteniendo paginas")
+      return
+    }
+    const data = await res.json()
+    const pagesToProcess = data.pages || []
     
     if (pagesToProcess.length === 0) {
       alert("No hay paginas publicadas para actualizar")
@@ -559,7 +574,7 @@ export default function PaginasPage() {
     })
     
     for (let i = 0; i < pagesToProcess.length; i++) {
-      const page = pagesToProcess[i]
+      const page = pagesToProcess[i] as Page
       const serviceName = page.services?.name || "Servicio"
       const cityName = page.cities?.name || "Ciudad"
       const pageName = `${serviceName} en ${cityName}`
@@ -617,8 +632,14 @@ export default function PaginasPage() {
 
   // Regenerar imagenes en bulk (para paginas que YA tienen imagen)
   const bulkRegenerateImages = async () => {
-    // Procesar todas las paginas publicadas (regenerar sus imagenes)
-    const pagesToProcess = pages.filter(p => p.status === "published")
+    // Fetch ALL published pages from the server
+    const res = await fetch("/api/admin/pages/bulk-list?status=published&fields=id,slug,status,hero_image_url,services:service_id(name),cities:city_id(name)")
+    if (!res.ok) {
+      alert("Error obteniendo paginas")
+      return
+    }
+    const data = await res.json()
+    const pagesToProcess = data.pages || []
     
     if (pagesToProcess.length === 0) {
       alert("No hay paginas publicadas para regenerar imagenes")
@@ -635,7 +656,7 @@ export default function PaginasPage() {
     })
     
     for (let i = 0; i < pagesToProcess.length; i++) {
-      const page = pagesToProcess[i]
+      const page = pagesToProcess[i] as Page
       const serviceName = page.services?.name || "Servicio"
       const cityName = page.cities?.name || "Ciudad"
       const pageName = `${serviceName} en ${cityName}`
@@ -703,36 +724,97 @@ export default function PaginasPage() {
     fetchPages()
   }
 
-  // Generate maps for pages without coordinates
+  // Generate maps for pages without coordinates - processes ALL pages in batches
   const generateMaps = async () => {
     if (pagesWithoutMaps === 0) {
       alert("Todas las paginas ya tienen coordenadas de mapa")
       return
     }
 
-    setGenerateMapsLoading(true)
-    try {
-      const res = await fetch("/api/admin/generate-maps", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({})
-      })
+    setGenerateMapsDialogOpen(true)
+    setGenerateMapsProgress({
+      current: 0,
+      total: pagesWithoutMaps,
+      currentPage: "Iniciando...",
+      status: "generating",
+      results: [],
+      remaining: pagesWithoutMaps
+    })
 
-      const data = await res.json()
+    let totalUpdated = 0
+    let totalFailed = 0
+    const allErrors: string[] = []
+    let hasMore = true
+    let batchNumber = 0
+    const BATCH_SIZE = 50 // Procesar 50 a la vez
 
-      if (res.ok) {
-        alert(`Mapas generados:\n- Actualizados: ${data.updated}\n- Fallidos: ${data.failed}\n\n${data.errors?.length > 0 ? "Errores:\n" + data.errors.join("\n") : ""}`)
-        fetchPagesWithoutMaps()
-        fetchPages()
-      } else {
-        alert("Error: " + (data.error || "Error desconocido"))
+    while (hasMore) {
+      batchNumber++
+      setGenerateMapsProgress(prev => ({
+        ...prev,
+        currentPage: `Procesando lote ${batchNumber}...`,
+        status: "generating"
+      }))
+
+      try {
+        const res = await fetch("/api/admin/generate-maps", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ batchSize: BATCH_SIZE })
+        })
+
+        const data = await res.json()
+
+        if (res.ok) {
+          totalUpdated += data.updated || 0
+          totalFailed += data.failed || 0
+          if (data.errors?.length > 0) {
+            allErrors.push(...data.errors.slice(0, 5)) // Solo guardar primeros 5 errores por lote
+          }
+          
+          hasMore = data.hasMore === true
+          
+          setGenerateMapsProgress(prev => ({
+            ...prev,
+            current: totalUpdated + totalFailed,
+            remaining: data.remaining || 0,
+            results: [
+              ...prev.results,
+              { 
+                pageId: `batch-${batchNumber}`, 
+                pageName: `Lote ${batchNumber}: ${data.updated} actualizados, ${data.failed} fallidos`, 
+                success: data.failed === 0 
+              }
+            ]
+          }))
+        } else {
+          allErrors.push(`Error en lote ${batchNumber}: ${data.error || "Error desconocido"}`)
+          hasMore = false // Parar si hay error
+        }
+      } catch (error) {
+        console.error("Error generating maps:", error)
+        allErrors.push(`Error de conexion en lote ${batchNumber}`)
+        hasMore = false
       }
-    } catch (error) {
-      console.error("Error generating maps:", error)
-      alert("Error de conexion al generar mapas")
-    } finally {
-      setGenerateMapsLoading(false)
+
+      // Pequena pausa entre lotes
+      if (hasMore) {
+        await new Promise(r => setTimeout(r, 100))
+      }
     }
+
+    setGenerateMapsProgress(prev => ({
+      ...prev,
+      status: "done",
+      currentPage: `Completado: ${totalUpdated} actualizados, ${totalFailed} fallidos`,
+      results: [
+        ...prev.results,
+        ...(allErrors.length > 0 ? [{ pageId: "errors", pageName: `Errores: ${allErrors.length}`, success: false, error: allErrors.join(", ") }] : [])
+      ]
+    }))
+
+    fetchPagesWithoutMaps()
+    fetchPages()
   }
 
   // Fix broken images and publish pages
@@ -890,13 +972,11 @@ export default function PaginasPage() {
           <Button 
             onClick={generateMaps}
             variant="outline"
-            disabled={generateMapsLoading || pagesWithoutMaps === 0}
+            disabled={generateMapsDialogOpen || pagesWithoutMaps === 0}
             className="border-cyan-300 text-cyan-600 hover:bg-cyan-50"
           >
-            <Globe className={`h-4 w-4 mr-2 ${generateMapsLoading ? "animate-spin" : ""}`} />
-            {generateMapsLoading 
-              ? "Generando..." 
-              : pagesWithoutMaps > 0 
+            <Globe className="h-4 w-4 mr-2" />
+            {pagesWithoutMaps > 0 
                 ? `Generar Mapas (${pagesWithoutMaps})` 
                 : "Mapas OK"
             }
@@ -1145,6 +1225,74 @@ export default function PaginasPage() {
                   onClick={() => {
                     setRegenImagesDialogOpen(false)
                     setRegenImagesProgress({ current: 0, total: 0, currentPage: "", status: "idle", results: [] })
+                  }}
+                >
+                  Cerrar
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Generate Maps Progress Dialog */}
+      <Dialog open={generateMapsDialogOpen} onOpenChange={setGenerateMapsDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5 text-cyan-500" />
+              Generando Coordenadas de Mapas
+            </DialogTitle>
+            <DialogDescription>
+              {generateMapsProgress.status === "done" 
+                ? "Generacion completada" 
+                : `Procesando... ${generateMapsProgress.remaining || 0} paginas restantes`
+              }
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {generateMapsProgress.status !== "done" && generateMapsProgress.total > 0 && (
+              <>
+                <Progress value={Math.min(((generateMapsProgress.total - (generateMapsProgress.remaining || 0)) / generateMapsProgress.total) * 100, 100)} />
+                <div className="text-sm text-center">
+                  <span className="font-medium">{generateMapsProgress.currentPage}</span>
+                </div>
+              </>
+            )}
+            
+            {generateMapsProgress.results.length > 0 && (
+              <div className="max-h-60 overflow-y-auto space-y-2">
+                {generateMapsProgress.results.map((result, i) => (
+                  <div 
+                    key={i} 
+                    className={`flex items-center gap-2 p-2 rounded text-sm ${
+                      result.success ? "bg-cyan-50" : "bg-red-50"
+                    }`}
+                  >
+                    {result.success ? (
+                      <CheckCircle className="h-4 w-4 text-cyan-600 flex-shrink-0" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
+                    )}
+                    <span className={`${result.success ? "text-cyan-700" : "text-red-700"} text-xs`}>
+                      {result.pageName}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {generateMapsProgress.status === "done" && (
+              <div className="text-center pt-4">
+                <p className="text-lg font-medium text-cyan-600">
+                  {generateMapsProgress.currentPage}
+                </p>
+                <Button 
+                  className="mt-4" 
+                  onClick={() => {
+                    setGenerateMapsDialogOpen(false)
+                    setGenerateMapsProgress({ current: 0, total: 0, currentPage: "", status: "idle", results: [], remaining: 0 })
                   }}
                 >
                   Cerrar
