@@ -346,18 +346,20 @@ export async function GET(request: Request) {
     
     console.log(`[CRON] Cleaned up ${deletedPages?.length || 0} stuck generating pages`)
 
-    // Step 2: Get the main service (electricistas)
+    // Step 2: Get ONLY electricista service (not cerrajero or others)
     const { data: services, error: servicesError } = await supabase
       .from("services")
       .select("id, name, slug, description")
+      .eq("slug", "electricista")
       .limit(1)
 
     if (servicesError || !services || services.length === 0) {
-      console.error("[CRON] Error fetching services:", servicesError)
-      return NextResponse.json({ error: "No services found" }, { status: 500 })
+      console.error("[CRON] Error fetching electricista service:", servicesError)
+      return NextResponse.json({ error: "Electricista service not found" }, { status: 500 })
     }
 
     const service = services[0]
+    console.log(`[CRON] Using service: ${service.name} (${service.slug})`)
 
     // Step 3: Find cities that don't have pages for this service yet
     const { data: existingPages, error: pagesError } = await supabase
