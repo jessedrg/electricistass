@@ -3,8 +3,8 @@ import { createClient } from "@/lib/supabase/server"
 import { generatePageContent, generateDesignVariation, generateCityImageUrls } from "@/lib/ai/generate-content"
 
 // Configuration
-const MIN_POPULATION = 10000 // Minimum population for cities
-const CITIES_PER_EXECUTION = 10 // How many cities to process per cron run
+const MIN_POPULATION = 10000 // Minimum population for cities (Spain)
+const CITIES_PER_EXECUTION = 10 // How many cities to process per cron run (only Spanish cities)
 
 export const maxDuration = 300 // 5 minutes max
 
@@ -18,12 +18,13 @@ export async function GET(request: Request) {
   const supabase = await createClient()
   
   try {
-    // Step 1: Find cities with 10,000+ population that don't have pages yet
-    // First get all cities with sufficient population
+    // Step 1: Find Spanish cities with 10,000+ population that don't have pages yet
+    // Only cities with province (Spanish cities have provinces)
     const { data: cities, error: citiesError } = await supabase
       .from("cities")
       .select("id, name, slug, province, population, neighborhoods, local_context, landmarks")
       .gte("population", MIN_POPULATION)
+      .not("province", "is", null) // Only Spanish cities (have province)
       .order("population", { ascending: false })
 
     if (citiesError) {
