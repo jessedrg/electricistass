@@ -852,9 +852,15 @@ export default function PaginasPage() {
   const refreshSitemap = async () => {
     setRefreshingSitemap(true)
     try {
-      // Obtener todas las paginas publicadas para revalidar
-      const publishedPages = pages.filter(p => p.status === "published")
-      const paths = ["/sitemap.xml", ...publishedPages.map(p => `/${p.slug}`)]
+      // Obtener TODAS las paginas publicadas del servidor (no solo las de la vista actual)
+      const res = await fetch("/api/admin/pages/bulk-list?status=published&fields=id,slug")
+      if (!res.ok) {
+        throw new Error("Error obteniendo paginas")
+      }
+      const data = await res.json()
+      const publishedPages = data.pages || []
+      
+      const paths = ["/sitemap.xml", ...publishedPages.map((p: { slug: string }) => `/${p.slug}`)]
       
       await fetch("/api/admin/revalidate", {
         method: "POST",
