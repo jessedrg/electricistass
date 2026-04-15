@@ -4,22 +4,47 @@ import { verifyAdminSession } from "@/lib/admin/auth"
 
 export const maxDuration = 300
 
-// Generate real Unsplash images for cities
-function generateCityImageUrls(cityName: string) {
-  const searchTerms = [
-    `${cityName} spain city`,
-    `${cityName} spain architecture`,
-    `${cityName} spain street`,
-    `electrician work`,
-    `electrical repair`,
+// Reliable static Unsplash images for electricians (these URLs always work)
+const ELECTRICIAN_IMAGES = {
+  hero: [
+    "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=1200&h=800&fit=crop", // electrician working
+    "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&h=800&fit=crop", // electrical panel
+    "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200&h=800&fit=crop", // electrician tools
+    "https://images.unsplash.com/photo-1555963966-b7ae5404b6ed?w=1200&h=800&fit=crop", // electrical work
+    "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=1200&h=800&fit=crop", // light bulb
+  ],
+  gallery: [
+    "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1517420704952-d9f39e95b43e?w=800&h=600&fit=crop",
   ]
+}
+
+// Generate reliable images (random from pool)
+function generateReliableImages(slug: string) {
+  // Use slug hash for consistent but varied selection
+  const hash = slug.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
   
-  const hero = `https://source.unsplash.com/1200x800/?${encodeURIComponent(searchTerms[0])}`
-  const gallery = searchTerms.slice(1).map((term, i) => 
-    `https://source.unsplash.com/800x600/?${encodeURIComponent(term)}&sig=${i}`
-  )
+  const heroIndex = hash % ELECTRICIAN_IMAGES.hero.length
+  const hero = ELECTRICIAN_IMAGES.hero[heroIndex]
+  
+  // Shuffle gallery based on hash
+  const gallery = ELECTRICIAN_IMAGES.gallery.map((img, i) => {
+    const offset = (hash + i) % ELECTRICIAN_IMAGES.gallery.length
+    return ELECTRICIAN_IMAGES.gallery[offset]
+  })
   
   return { hero, gallery }
+}
+
+// Check if URL is a broken Unsplash source URL (deprecated)
+function isBrokenImageUrl(url: string | null): boolean {
+  if (!url) return true
+  if (url === "") return true
+  // source.unsplash.com is deprecated and often returns broken images
+  if (url.includes("source.unsplash.com")) return true
+  return false
 }
 
 // GET - Count pages with broken/missing images
@@ -31,18 +56,20 @@ export async function GET() {
 
   const supabase = await createClient()
 
-  // Find pages with null/empty hero_image_url
-  const { data: pagesWithoutImages, error } = await supabase
+  // Find ALL pages and check for broken images
+  const { data: pages, error } = await supabase
     .from("pages")
-    .select("id", { count: "exact" })
-    .or("hero_image_url.is.null,hero_image_url.eq.")
+    .select("id, hero_image_url")
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
+  // Count pages with null, empty, or broken image URLs
+  const pagesWithBrokenImages = pages?.filter(p => isBrokenImageUrl(p.hero_image_url)) || []
+
   return NextResponse.json({ 
-    pagesWithoutImages: pagesWithoutImages?.length || 0 
+    pagesWithoutImages: pagesWithBrokenImages.length 
   })
 }
 
@@ -58,92 +85,30 @@ export async function POST(request: Request) {
   const { publish = false, limit = 50 } = body
 
   try {
-    // Find pages with missing images
-    const { data: pages, error: pagesError } = await supabase
+    // Find ALL pages and filter for broken/missing images
+    const { data: allPages, error: pagesError } = await supabase
       .from("pages")
-      .select(`
-        id,
-        slug,
-        status,
-        cities (
-          name
-        )
-      `)
-      .or("hero_image_url.is.null,hero_image_url.eq.")
-      .limit(limit)
+      .select("id, slug, status, hero_image_url")
 
     if (pagesError) {
-      // Try simpler query without join
-      const { data: simplePages, error: simpleError } = await supabase
-        .from("pages")
-        .select("id, slug, status, city_id")
-        .or("hero_image_url.is.null,hero_image_url.eq.")
-        .limit(limit)
-
-      if (simpleError) {
-        return NextResponse.json({ error: simpleError.message }, { status: 500 })
-      }
-
-      // Get city names separately
-      const cityIds = [...new Set(simplePages?.map(p => p.city_id).filter(Boolean))]
-      const { data: cities } = await supabase
-        .from("cities")
-        .select("id, name")
-        .in("id", cityIds)
-
-      const cityMap = new Map(cities?.map(c => [c.id, c.name]) || [])
-      
-      const results = {
-        fixed: 0,
-        published: 0,
-        failed: 0,
-        errors: [] as string[]
-      }
-
-      for (const page of simplePages || []) {
-        try {
-          // Extract city name from slug or city data
-          const cityName = cityMap.get(page.city_id) || 
-            page.slug.replace("electricista-", "").replace(/-/g, " ")
-          
-          const images = generateCityImageUrls(cityName)
-
-          const updateData: Record<string, unknown> = {
-            hero_image_url: images.hero,
-            gallery_images: images.gallery,
-            updated_at: new Date().toISOString()
-          }
-
-          // If publish flag is true and page is draft, publish it
-          if (publish && (page.status === "draft" || page.status === "generating")) {
-            updateData.status = "published"
-            updateData.published_at = new Date().toISOString()
-          }
-
-          const { error: updateError } = await supabase
-            .from("pages")
-            .update(updateData)
-            .eq("id", page.id)
-
-          if (updateError) {
-            results.failed++
-            results.errors.push(`${page.slug}: ${updateError.message}`)
-          } else {
-            results.fixed++
-            if (publish && (page.status === "draft" || page.status === "generating")) {
-              results.published++
-            }
-          }
-        } catch (err) {
-          results.failed++
-          results.errors.push(`${page.slug}: ${err instanceof Error ? err.message : "Unknown error"}`)
-        }
-      }
-
-      return NextResponse.json(results)
+      return NextResponse.json({ error: pagesError.message }, { status: 500 })
     }
 
-    // Process with city join data
+    // Filter pages with broken images
+    const pagesToFix = (allPages || [])
+      .filter(p => isBrokenImageUrl(p.hero_image_url))
+      .slice(0, limit)
+
+    if (pagesToFix.length === 0) {
+      return NextResponse.json({ 
+        fixed: 0, 
+        published: 0, 
+        failed: 0, 
+        errors: [],
+        message: "No hay paginas con imagenes rotas"
+      })
+    }
+
     const results = {
       fixed: 0,
       published: 0,
@@ -151,13 +116,9 @@ export async function POST(request: Request) {
       errors: [] as string[]
     }
 
-    for (const page of pages || []) {
+    for (const page of pagesToFix) {
       try {
-        const cityData = page.cities as { name: string } | null
-        const cityName = cityData?.name || 
-          page.slug.replace("electricista-", "").replace(/-/g, " ")
-        
-        const images = generateCityImageUrls(cityName)
+        const images = generateReliableImages(page.slug)
 
         const updateData: Record<string, unknown> = {
           hero_image_url: images.hero,
@@ -165,6 +126,7 @@ export async function POST(request: Request) {
           updated_at: new Date().toISOString()
         }
 
+        // If publish flag is true and page is draft, publish it
         if (publish && (page.status === "draft" || page.status === "generating")) {
           updateData.status = "published"
           updateData.published_at = new Date().toISOString()

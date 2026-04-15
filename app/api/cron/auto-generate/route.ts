@@ -306,47 +306,44 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  console.log("[CRON] ========== AUTO-GENERATE STARTED ==========")
+  console.log("[CRON] ========== AUTO-GENERATE STARTED (QUEUE MODE) ==========")
   console.log("[CRON] Timestamp:", new Date().toISOString())
   
   const supabase = await createClient()
   
   try {
-    // Step 1: Find Spanish cities with 10,000+ population that don't have pages yet
-    const { data: cities, error: citiesError } = await supabase
-      .from("cities")
-      .select("id, name, slug, province, population, neighborhoods, local_context, landmarks")
-      .gte("population", MIN_POPULATION)
-      .not("province", "is", null) // Only Spanish cities (have province)
-      .order("population", { ascending: false })
+    // Step 1: Reset stuck "processing" items (older than 5 minutes)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+    await supabase
+      .from("city_generation_queue")
+      .update({ status: "pending", attempts: 0 })
+      .eq("status", "processing")
+      .lt("last_attempt_at", fiveMinutesAgo)
 
-    if (citiesError) {
-      console.error("[CRON] Error fetching cities:", citiesError)
-      return NextResponse.json({ error: "Failed to fetch cities" }, { status: 500 })
+    // Step 2: Get next N pending items from queue (ordered by priority = population)
+    const { data: queueItems, error: queueError } = await supabase
+      .from("city_generation_queue")
+      .select("*")
+      .eq("status", "pending")
+      .eq("service_slug", "electricista")
+      .order("priority", { ascending: false })
+      .limit(CITIES_PER_EXECUTION)
+
+    if (queueError) {
+      console.error("[CRON] Error fetching queue:", queueError)
+      return NextResponse.json({ error: "Failed to fetch queue" }, { status: 500 })
     }
 
-    console.log(`[CRON] Found ${cities?.length || 0} cities with population >= ${MIN_POPULATION}`)
+    console.log(`[CRON] Found ${queueItems?.length || 0} pending items in queue`)
 
-    if (!cities || cities.length === 0) {
-      console.log("[CRON] No cities found, exiting")
+    if (!queueItems || queueItems.length === 0) {
       return NextResponse.json({ 
-        message: "No cities found with population >= 10,000",
+        message: "No pending cities in queue",
         generated: 0 
       })
     }
 
-    // Step 1.5: Clean up ALL stuck "generating" pages (older than 2 minutes)
-    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString()
-    const { data: deletedPages } = await supabase
-      .from("pages")
-      .delete()
-      .eq("status", "generating")
-      .lt("created_at", twoMinutesAgo)
-      .select("id")
-    
-    console.log(`[CRON] Cleaned up ${deletedPages?.length || 0} stuck generating pages`)
-
-    // Step 2: Get ONLY electricista service (not cerrajero or others)
+    // Step 3: Get electricista service
     const { data: services, error: servicesError } = await supabase
       .from("services")
       .select("id, name, slug, description")
@@ -360,46 +357,7 @@ export async function GET(request: Request) {
 
     const service = services[0]
     console.log(`[CRON] Using service: ${service.name} (${service.slug})`)
-
-    // Step 3: Find cities that don't have pages for this service yet
-    // Get ALL existing page slugs that start with "electricista-"
-    const { data: existingPages, error: pagesError } = await supabase
-      .from("pages")
-      .select("slug")
-      .like("slug", "electricista-%")
-
-    if (pagesError) {
-      console.error("[CRON] Error fetching existing pages:", pagesError)
-      return NextResponse.json({ error: "Failed to fetch pages" }, { status: 500 })
-    }
-
-    // Create set of city slugs that already have pages
-    // slug format is "electricista-{city-slug}", so extract city slug
-    const existingSlugs = new Set(
-      existingPages?.map(p => p.slug.replace("electricista-", "")) || []
-    )
-    console.log(`[CRON] Existing electricista pages: ${existingSlugs.size}`)
-    
-    // Filter to cities without pages (by slug, not city_id)
-    const citiesWithoutPages = cities.filter(city => !existingSlugs.has(city.slug))
-    console.log(`[CRON] Cities without pages: ${citiesWithoutPages.length}`)
-
-    if (citiesWithoutPages.length === 0) {
-      return NextResponse.json({ 
-        message: "All cities with 10,000+ population already have pages",
-        generated: 0,
-        totalCities: cities.length
-      })
-    }
-
-    // Step 4: Shuffle and take random N cities (super aleatorio!)
-    const shuffled = citiesWithoutPages
-      .map(city => ({ city, sort: Math.random() }))
-      .sort((a, b) => a.sort - b.sort)
-      .map(({ city }) => city)
-    
-    const citiesToProcess = shuffled.slice(0, CITIES_PER_EXECUTION)
-    console.log(`[CRON] Processing ${citiesToProcess.length} cities:`, citiesToProcess.map(c => c.name).join(", "))
+    console.log(`[CRON] Processing ${queueItems.length} cities:`, queueItems.map(q => q.city_name).join(", "))
 
     const results = {
       success: 0,
@@ -408,12 +366,23 @@ export async function GET(request: Request) {
       errors: [] as string[],
     }
 
-    for (const city of citiesToProcess) {
+    for (const queueItem of queueItems) {
       try {
-        console.log(`[CRON] Generating page for ${service.name} in ${city.name}`)
+        // Mark as processing
+        await supabase
+          .from("city_generation_queue")
+          .update({ 
+            status: "processing", 
+            last_attempt_at: new Date().toISOString(),
+            attempts: (queueItem.attempts || 0) + 1
+          })
+          .eq("id", queueItem.id)
 
-        const pageSlug = `${service.slug}-${city.slug}`
+        console.log(`[CRON] Generating page for ${service.name} in ${queueItem.city_name}`)
+
+        const pageSlug = `${service.slug}-${queueItem.city_slug}`
         
+        // Check if page already exists
         const { data: existingPage } = await supabase
           .from("pages")
           .select("id")
@@ -421,16 +390,31 @@ export async function GET(request: Request) {
           .single()
 
         if (existingPage) {
-          console.log(`[CRON] Page ${pageSlug} already exists, skipping`)
+          console.log(`[CRON] Page ${pageSlug} already exists, marking as skipped`)
+          await supabase
+            .from("city_generation_queue")
+            .update({ 
+              status: "skipped", 
+              completed_at: new Date().toISOString(),
+              error_message: "Page already exists"
+            })
+            .eq("id", queueItem.id)
           continue
         }
+
+        // Get city data from cities table
+        const { data: cityData } = await supabase
+          .from("cities")
+          .select("id, neighborhoods, local_context, landmarks")
+          .eq("slug", queueItem.city_slug)
+          .single()
 
         // Insert page as generating
         const { data: newPage, error: insertError } = await supabase
           .from("pages")
           .insert({
             service_id: service.id,
-            city_id: city.id,
+            city_id: cityData?.id || null,
             slug: pageSlug,
             status: "generating",
             sitemap_priority: 0.8,
@@ -446,12 +430,12 @@ export async function GET(request: Request) {
         // Generate content with FULL prompt (same as generate-page API)
         const content = await generateContentWithFullPrompt(
           service.name,
-          city.name,
-          city.province || ""
+          queueItem.city_name,
+          queueItem.province || ""
         )
 
         // Generate design variation (NO images - will be generated separately)
-        const designVariation = generateDesignVariation(service.slug, city.slug)
+        const designVariation = generateDesignVariation(service.slug, queueItem.city_slug)
 
         // Update page with generated content - set as DRAFT
         // ONLY columns from create-all-tables.sql
@@ -508,34 +492,59 @@ export async function GET(request: Request) {
 
         if (updateError) {
           // Si falla el update, borrar la pagina para no dejarla en "generating"
-          console.error(`[CRON] Update failed for ${city.name}, deleting page:`, updateError)
+          console.error(`[CRON] Update failed for ${queueItem.city_name}, deleting page:`, updateError)
           await supabase.from("pages").delete().eq("id", newPage.id)
           throw updateError
         }
 
+        // Mark queue item as completed
+        await supabase
+          .from("city_generation_queue")
+          .update({ 
+            status: "completed", 
+            completed_at: new Date().toISOString(),
+            generated_page_id: newPage.id,
+            generated_page_slug: pageSlug
+          })
+          .eq("id", queueItem.id)
+
         results.success++
-        results.pages.push(`${city.name} (${city.population?.toLocaleString()} hab)`)
-        console.log(`[CRON] Successfully generated draft page for ${city.name}`)
+        results.pages.push(`${queueItem.city_name} (${queueItem.population?.toLocaleString()} hab)`)
+        console.log(`[CRON] Successfully generated draft page for ${queueItem.city_name}`)
 
       } catch (error) {
-        console.error(`[CRON] Error generating page for ${city.name}:`, error)
+        console.error(`[CRON] Error generating page for ${queueItem.city_name}:`, error)
         results.failed++
-        results.errors.push(`${city.name}: ${error instanceof Error ? error.message : "Unknown error"}`)
+        results.errors.push(`${queueItem.city_name}: ${error instanceof Error ? error.message : "Unknown error"}`)
         
-        // Limpiar cualquier pagina que haya quedado en generating para esta ciudad
+        // Mark queue item as failed
+        await supabase
+          .from("city_generation_queue")
+          .update({ 
+            status: "failed", 
+            error_message: error instanceof Error ? error.message : "Unknown error"
+          })
+          .eq("id", queueItem.id)
+        
+        // Limpiar cualquier pagina que haya quedado en generating
         await supabase
           .from("pages")
           .delete()
-          .eq("city_id", city.id)
+          .eq("slug", `electricista-${queueItem.city_slug}`)
           .eq("status", "generating")
       }
     }
 
+    // Get remaining count
+    const { count: remainingCount } = await supabase
+      .from("city_generation_queue")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "pending")
+
     return NextResponse.json({
       message: `Generated ${results.success} draft pages, ${results.failed} failed`,
       ...results,
-      remainingCities: citiesWithoutPages.length - results.success,
-      totalCitiesWithPopulation: cities.length,
+      remainingInQueue: remainingCount || 0,
     })
     
   } catch (error) {
