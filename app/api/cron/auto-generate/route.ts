@@ -76,8 +76,13 @@ export async function GET(request: Request) {
       })
     }
 
-    // Step 4: Take the first N cities and generate pages
-    const citiesToProcess = citiesWithoutPages.slice(0, CITIES_PER_EXECUTION)
+    // Step 4: Shuffle and take random N cities (super aleatorio!)
+    const shuffled = citiesWithoutPages
+      .map(city => ({ city, sort: Math.random() }))
+      .sort((a, b) => a.sort - b.sort)
+      .map(({ city }) => city)
+    
+    const citiesToProcess = shuffled.slice(0, CITIES_PER_EXECUTION)
 
     const results = {
       success: 0,
