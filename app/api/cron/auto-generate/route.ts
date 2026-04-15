@@ -335,15 +335,16 @@ export async function GET(request: Request) {
       })
     }
 
-    // Step 1.5: Clean up stuck "generating" pages (older than 10 minutes)
-    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString()
-    await supabase
+    // Step 1.5: Clean up ALL stuck "generating" pages (older than 2 minutes)
+    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString()
+    const { data: deletedPages } = await supabase
       .from("pages")
       .delete()
       .eq("status", "generating")
-      .lt("created_at", tenMinutesAgo)
+      .lt("created_at", twoMinutesAgo)
+      .select("id")
     
-    console.log("[CRON] Cleaned up stuck generating pages")
+    console.log(`[CRON] Cleaned up ${deletedPages?.length || 0} stuck generating pages`)
 
     // Step 2: Get the main service (electricistas)
     const { data: services, error: servicesError } = await supabase
@@ -500,6 +501,9 @@ export async function GET(request: Request) {
           .eq("id", newPage.id)
 
         if (updateError) {
+          // Si falla el update, borrar la pagina para no dejarla en "generating"
+          console.error(`[CRON] Update failed for ${city.name}, deleting page:`, updateError)
+          await supabase.from("pages").delete().eq("id", newPage.id)
           throw updateError
         }
 
@@ -511,6 +515,13 @@ export async function GET(request: Request) {
         console.error(`[CRON] Error generating page for ${city.name}:`, error)
         results.failed++
         results.errors.push(`${city.name}: ${error instanceof Error ? error.message : "Unknown error"}`)
+        
+        // Limpiar cualquier pagina que haya quedado en generating para esta ciudad
+        await supabase
+          .from("pages")
+          .delete()
+          .eq("city_id", city.id)
+          .eq("status", "generating")
       }
     }
 
