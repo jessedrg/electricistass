@@ -83,20 +83,7 @@ export async function POST(request: Request) {
     // Buscar paginas sin coordenadas
     let query = supabase
       .from("pages")
-      .select(`
-        id,
-        slug,
-        latitude,
-        longitude,
-        cities (
-          id,
-          name,
-          slug,
-          province,
-          latitude,
-          longitude
-        )
-      `)
+      .select("id, slug, latitude, longitude, city_id")
       .or("latitude.is.null,longitude.is.null")
 
     if (pageIds && pageIds.length > 0) {
@@ -107,8 +94,17 @@ export async function POST(request: Request) {
 
     if (pagesError) {
       console.error("Error fetching pages:", pagesError)
-      return NextResponse.json({ error: "Error obteniendo paginas" }, { status: 500 })
+      return NextResponse.json({ error: "Error obteniendo paginas: " + pagesError.message }, { status: 500 })
     }
+
+    // Obtener las ciudades por separado
+    const cityIds = [...new Set(pages?.map(p => p.city_id).filter(Boolean))]
+    const { data: citiesData } = await supabase
+      .from("cities")
+      .select("id, name, slug, province, latitude, longitude")
+      .in("id", cityIds)
+    
+    const citiesMap = new Map(citiesData?.map(c => [c.id, c]) || [])
 
     if (!pages || pages.length === 0) {
       return NextResponse.json({ 
@@ -125,7 +121,7 @@ export async function POST(request: Request) {
     }
 
     for (const page of pages) {
-      const city = page.cities as { id: string; name: string; slug: string; province: string | null; latitude: number | null; longitude: number | null } | null
+      const city = citiesMap.get(page.city_id)
       
       if (!city) {
         results.errors.push(`${page.slug}: No tiene ciudad asociada`)
