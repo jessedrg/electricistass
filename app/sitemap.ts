@@ -7,7 +7,7 @@ type ChangeFrequency = "always" | "hourly" | "daily" | "weekly" | "monthly" | "y
  * Sitemap dinámico - Solo incluye contenido publicado de la base de datos
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.electricistass.com"
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.instalacioneselectricasjj.com"
   
   try {
     // Usar cliente directo sin SSR para evitar problemas de contexto

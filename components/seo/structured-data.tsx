@@ -1,7 +1,7 @@
 // Company constants
 const COMPANY_NAME = "Electricistas 24H"
 const COMPANY_PHONE = "+34900433214"
-const COMPANY_URL = "https://www.electricistass.com"
+const COMPANY_URL = "https://www.instalacioneselectricasjj.com"
 
 interface ReviewData {
   name: string
@@ -204,7 +204,7 @@ export function generateOrganizationJsonLd() {
     "url": COMPANY_URL,
     "logo": `${COMPANY_URL}/logo.jpg`,
     "telephone": COMPANY_PHONE,
-    "email": "info@electricistass.com",
+    "email": "info@instalacioneselectricasjj.com",
     "address": {
       "@type": "PostalAddress",
       "addressCountry": "ES"

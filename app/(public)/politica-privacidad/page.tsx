@@ -17,8 +17,8 @@ export default function PoliticaPrivacidadPage() {
             <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
               <li><strong>Responsable:</strong> Electricistas 24H</li>
               <li><strong>Teléfono:</strong> 900 433 214</li>
-              <li><strong>Email:</strong> info@electricistass.com</li>
-              <li><strong>Web:</strong> www.electricistass.com</li>
+              <li><strong>Email:</strong> info@instalacioneselectricasjj.com</li>
+              <li><strong>Web:</strong> www.instalacioneselectricasjj.com</li>
             </ul>
           </section>
 
@@ -64,7 +64,7 @@ export default function PoliticaPrivacidadPage() {
               <li><strong>Portabilidad:</strong> Recibir sus datos en un formato estructurado.</li>
             </ul>
             <p className="text-muted-foreground mt-4">
-              Para ejercer estos derechos, puede contactar con nosotros enviando un email a <strong>info@electricistass.com</strong> o llamando al <strong>900 433 214</strong>.
+              Para ejercer estos derechos, puede contactar con nosotros enviando un email a <strong>info@instalacioneselectricasjj.com</strong> o llamando al <strong>900 433 214</strong>.
             </p>
           </section>
 

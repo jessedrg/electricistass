@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   description: 'Electricistas 24H - Electricistas profesionales en toda España. Urgencias eléctricas 24 horas, instalaciones, averías y reformas. Llama al 900 433 214. Presupuesto gratis.',
   keywords: ['electricista urgente', 'electricista 24 horas', 'averías eléctricas', 'instalación eléctrica', 'electricista barato', 'urgencias eléctricas', '900 433 214'],
   generator: 'v0.app',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.electricistass.com'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.instalacioneselectricasjj.com'),
   openGraph: {
     type: 'website',
     locale: 'es_ES',

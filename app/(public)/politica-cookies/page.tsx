@@ -97,7 +97,7 @@ export default function PoliticaCookiesPage() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">6. Contacto</h2>
             <p className="text-muted-foreground">
-              Si tiene alguna duda sobre esta política de cookies, puede contactar con nosotros a través del teléfono <strong>900 433 214</strong> o enviando un email a <strong>info@electricistass.com</strong>.
+              Si tiene alguna duda sobre esta política de cookies, puede contactar con nosotros a través del teléfono <strong>900 433 214</strong> o enviando un email a <strong>info@instalacioneselectricasjj.com</strong>.
             </p>
           </section>
 
