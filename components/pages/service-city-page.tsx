@@ -347,10 +347,10 @@ const contentWidths: Record<string, string> = {
 }
 
 const sectionSpacings: Record<string, string> = {
-  compact: "py-8 md:py-10",
-  standard: "py-12 md:py-16",
-  spacious: "py-16 md:py-20",
-  generous: "py-20 md:py-28",
+  compact: "py-10 md:py-12",
+  standard: "py-14 md:py-20",
+  spacious: "py-20 md:py-28",
+  generous: "py-24 md:py-32",
 }
 
 // Helper to strip HTML tags for plain text
@@ -553,7 +553,7 @@ ctaConfig={{
                   </h2>
                 )}
                 <div 
-                  className="prose prose-lg max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-a:text-emerald-700 hover:prose-a:text-orange-700"
+                  className="prose prose-lg max-w-none prose-headings:text-foreground prose-headings:mt-8 prose-headings:mb-4 prose-p:text-muted-foreground prose-p:mb-4 prose-strong:text-foreground prose-a:text-emerald-700 hover:prose-a:text-orange-700 prose-ul:my-4 prose-li:my-1"
                   dangerouslySetInnerHTML={{ __html: page.intro_text || "" }}
                 />
               </div>
@@ -562,13 +562,13 @@ ctaConfig={{
 
           {/* Contenido específico de la ciudad */}
           {page.city_specific_content && (
-            <section className={cn(sectionSpacing, "border-t")}>
+            <section className={cn(sectionSpacing, "border-t mt-8")}>
               <div className={cn("mx-auto", contentWidth)}>
-                <h2 className="text-2xl font-bold mb-6">
+                <h2 className="text-2xl font-bold mb-8">
                   {service.name}{cityData.name ? ` en ${cityData.name}` : ""}: Lo que necesitas saber
                 </h2>
                 <div 
-                  className="prose prose-lg max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-a:text-emerald-700 hover:prose-a:text-orange-700"
+                  className="prose prose-lg max-w-none prose-headings:text-foreground prose-headings:mt-8 prose-headings:mb-4 prose-p:text-muted-foreground prose-p:mb-4 prose-strong:text-foreground prose-a:text-emerald-700 hover:prose-a:text-orange-700 prose-ul:my-4 prose-li:my-1"
                   dangerouslySetInnerHTML={{ __html: page.city_specific_content || "" }}
                 />
               </div>
@@ -577,7 +577,7 @@ ctaConfig={{
 
           {/* Galería de imágenes */}
           {galleryImages && galleryImages.length > 0 && (
-            <section className={cn(sectionSpacing, "border-t")}>
+            <section className={cn(sectionSpacing, "border-t mt-8")}>
               <ImageGallery 
                 images={galleryImages}
                 cityName={cityData.name}
@@ -588,7 +588,7 @@ ctaConfig={{
 
           {/* Services con precios */}
           {servicesEnabled && page.services_offered && page.services_offered.length > 0 && (
-            <section className={cn(sectionSpacing, "border-t")}>
+            <section className={cn(sectionSpacing, "border-t mt-8")}>
               <ServicesList 
                 services={page.services_offered}
                 title={`Servicios de ${service.name} en ${cityData.name}`}
@@ -602,7 +602,7 @@ ctaConfig={{
 
           {/* Por qué elegirnos */}
           {page.why_choose_us && page.why_choose_us.length > 0 && (
-            <section className={cn(sectionSpacing, "border-t", colors.bg)}>
+            <section className={cn(sectionSpacing, "border-t mt-8", colors.bg)}>
               <WhyChooseUs 
                 reasons={page.why_choose_us}
                 serviceName={service.name}
@@ -614,7 +614,7 @@ ctaConfig={{
 
           {/* Problemas comunes */}
           {page.common_problems && page.common_problems.length > 0 && (
-            <section className={cn(sectionSpacing, "border-t")}>
+            <section className={cn(sectionSpacing, "border-t mt-8")}>
               <CommonProblems 
                 problems={page.common_problems}
                 serviceName={service.name}
@@ -625,7 +625,7 @@ ctaConfig={{
 
           {/* Coverage Zones */}
           {page.coverage_zones && page.coverage_zones.length > 0 && (
-            <section className={cn(sectionSpacing, "border-t")}>
+            <section className={cn(sectionSpacing, "border-t mt-8")}>
               <CoverageZones 
                 zones={page.coverage_zones}
                 cityName={cityData.name}
@@ -636,7 +636,7 @@ ctaConfig={{
 
           {/* Local Tips */}
           {(page.local_tips || page.local_tips_list) && (
-            <section className={cn(sectionSpacing, "border-t")}>
+            <section className={cn(sectionSpacing, "border-t mt-8")}>
               <LocalTips 
                 tips={page.local_tips}
                 tipsList={page.local_tips_list}
@@ -649,7 +649,7 @@ ctaConfig={{
 
           {/* Datos Locales - Seccion generada por IA */}
           {page.local_facts && Object.keys(page.local_facts).length > 0 && (page.local_facts.famous_for || page.local_facts.interesting_fact || page.local_facts.local_landmark || page.local_facts.population_approx) && (
-            <section className={cn(sectionSpacing)}>
+            <section className={cn(sectionSpacing, "border-t mt-8")}>
               <div className={cn("mx-auto", contentWidth)}>
                 <div className="border border-gray-200 rounded-2xl bg-muted/30 p-8">
                 <h2 className="text-2xl font-bold mb-6">
@@ -719,7 +719,7 @@ ctaConfig={{
 
           {/* Seccion Extra - Generada por IA */}
           {page.extra_section_type && page.extra_section_type !== 'ninguno' && page.extra_section_content && (
-            <section className={cn(sectionSpacing, "border-t")}>
+            <section className={cn(sectionSpacing, "border-t mt-8")}>
               <div className={cn("mx-auto", contentWidth)}>
                 {page.extra_section_type === 'testimonial_destacado' && (
                   <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-8 rounded-2xl border border-orange-100">
@@ -767,7 +767,7 @@ ctaConfig={{
 
           {/* Testimonials / Reviews personalizadas */}
           {testimonialsEnabled && reviews && reviews.length > 0 && (
-            <section className={cn(sectionSpacing, "border-t")}>
+            <section className={cn(sectionSpacing, "border-t mt-8")}>
               <Testimonials 
                 testimonials={reviews}
                 title={`Opiniones de clientes en ${cityData.name}`}
@@ -780,7 +780,7 @@ ctaConfig={{
 
           {/* Google Maps y Foto de la ciudad */}
           {showMap && (
-            <section className={cn(sectionSpacing, "border-t")}>
+            <section className={cn(sectionSpacing, "border-t mt-8")}>
               <div className={cn("mx-auto", contentWidth)}>
                 <h2 className="text-2xl font-bold mb-6">
                   Zona de cobertura en {cityData.name}
@@ -823,7 +823,7 @@ ctaConfig={{
 
           {/* Precios indicativos */}
           {showPrices && page.price_range && (
-            <section className={cn(sectionSpacing, "border-t")}>
+            <section className={cn(sectionSpacing, "border-t mt-8")}>
               <div className={cn("mx-auto", contentWidth)}>
                 <h2 className="text-2xl font-bold mb-6">
                   Precios de {service.name}{cityData.name ? ` en ${cityData.name}` : ""}
@@ -855,7 +855,7 @@ ctaConfig={{
 
           {/* FAQs */}
           {faqEnabled && page.faqs && page.faqs.length > 0 && (
-            <section className={cn(sectionSpacing, "border-t")}>
+            <section className={cn(sectionSpacing, "border-t mt-8")}>
               <FAQSection 
                 faqs={page.faqs}
                 title={`Preguntas frecuentes sobre ${service.name} en ${cityData.name}`}
@@ -867,7 +867,7 @@ ctaConfig={{
 
           {/* CTA Final Personalizado */}
           {ctaEnabled && (
-            <section className={cn(sectionSpacing, "border-t")}>
+            <section className={cn(sectionSpacing, "border-t mt-8")}>
               {/* Si hay titulo/subtitulo personalizado del CTA final */}
               {(page.final_cta_title || page.final_cta_subtitle) && (
                 <div className={cn("mx-auto text-center mb-8", contentWidth)}>
