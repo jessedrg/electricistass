@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { streamObject } from "ai"
+import { generateObject } from "ai"
 import { z } from "zod"
 import { generateDesignVariation, generateCityImageUrls } from "@/lib/ai/generate-content"
 
@@ -149,8 +149,8 @@ async function generateContentWithFullPrompt(serviceName: string, cityName: stri
   const extraSections = ['testimonial_destacado', 'dato_curioso', 'proceso_trabajo', 'zona_cobertura', 'ninguno']
   const selectedExtra = extraSections[Math.floor(Math.random() * extraSections.length)]
 
-  const result = streamObject({
-    model: "openai/gpt-4o-mini", // Modelo barato
+  const result = await generateObject({
+    model: "openai/gpt-4o", // Modelo mas capaz para schemas complejos
     schema: pageContentSchema,
     messages: [
       {
@@ -293,7 +293,10 @@ ${selectedExtra !== 'ninguno' ? `Generar contenido HTML ${30 + Math.floor(Math.r
     ],
   })
 
-  return await result.object
+  if (!result.object) {
+    throw new Error("Failed to generate content - no object returned")
+  }
+  return result.object
 }
 
 export async function GET(request: Request) {
